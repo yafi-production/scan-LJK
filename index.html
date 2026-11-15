@@ -302,8 +302,17 @@
 
         // Initialize Firebase
         try {
-            appId = typeof __app_id !== 'undefined' ? __app_id : 'ljk-scanner-local';
-            const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+            appId = "eduscan-sekolah"; // Bebas diisi nama unik
+            const firebaseConfig = {
+              apiKey: "AIzaSyDOu79T9emgDvCdUAiSHglx5SBS7h-GV0M",
+              authDomain: "eksperimen-8423a.firebaseapp.com",
+              projectId: "eksperimen-8423a",
+              storageBucket: "eksperimen-8423a.firebasestorage.app",
+              messagingSenderId: "264370780221",
+              appId: "1:264370780221:web:721206bace6d329d9c5254",
+              measurementId: "G-LZHBCR2W05"
+            };
+
             
             if (!firebaseConfig) {
                 throw new Error("Firebase config tidak ditemukan.");
