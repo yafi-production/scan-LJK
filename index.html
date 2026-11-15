@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Pemindai & Analisis LJK</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tesseract.js v5 for OCR -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    
+    <!-- SheetJS for Excel Export -->
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .tab-active { border-bottom: 2px solid #2563eb; color: #2563eb; font-weight: 600; }
+        .tab-inactive { color: #6b7280; }
+        .tab-inactive:hover { color: #374151; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+        
+        .answer-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 0.5rem; }
+        .answer-input { text-transform: uppercase; text-align: center; }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden text-gray-800">
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-4 right-4 z-50 transform transition-transform duration-300 translate-x-full bg-white shadow-lg rounded-lg border-l-4 p-4 min-w-[300px]">
+        <div class="flex items-center">
+            <div id="toast-icon" class="mr-3"></div>
+            <p id="toast-message" class="text-sm font-medium"></p>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="fixed inset-0 bg-white/80 backdrop-blur-sm z-40 flex flex-col items-center justify-center">
+        <svg class="animate-spin h-10 w-10 text-blue-600 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <p id="loading-text" class="text-gray-700 font-medium">Menyiapkan Aplikasi...</p>
+    </div>
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <svg class="w-8 h-8 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                    <h1 class="text-xl font-bold text-gray-900">EduScan Analisis</h1>
+                </div>
+                <div class="text-sm text-gray-500">
+                    <span id="user-status">Menghubungkan...</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <div class="bg-white border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                <button onclick="switchTab('scan')" id="tab-scan" class="tab-active whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                    Scan / Input LJK
+                </button>
+                <button onclick="switchTab('results')" id="tab-results" class="tab-inactive whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                    Hasil & Analisis
+                </button>
+                <button onclick="switchTab('settings')" id="tab-settings" class="tab-inactive whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                    Pengaturan Kunci
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto bg-gray-50 p-4 sm:p-6 lg:p-8">
+        <div class="max-w-7xl mx-auto">
+
+            <!-- SCAN / INPUT TAB -->
+            <div id="content-scan" class="space-y-6 block">
+                
+                <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-blue-800">Petunjuk Penggunaan</h3>
+                            <div class="mt-2 text-sm text-blue-700">
+                                <p>Pastikan <strong>Pengaturan Kunci Jawaban</strong> sudah diisi sebelum memproses LJK. Gunakan tombol <em>Buka Kamera Scan</em> untuk memotret lembar jawaban secara langsung, atau koreksi/input cepat melalui kotak grid di bawah.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    
+                    <!-- Data Siswa Form -->
+                    <div class="bg-white shadow rounded-xl p-6 lg:col-span-1">
+                        <h2 class="text-lg font-semibold mb-4 border-b pb-2">Identitas Siswa</h2>
+                        <form id="student-form" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Nama Lengkap</label>
+                                <input type="text" id="nama" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2" placeholder="Otomatis dari scan atau ketik" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Kelas</label>
+                                <input type="text" id="kelas" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2" placeholder="Contoh: X TKJ 1" required>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Input Jawaban -->
+                    <div class="bg-white shadow rounded-xl p-6 lg:col-span-2">
+                        <div class="flex flex-wrap justify-between items-center gap-2 mb-4 border-b pb-2">
+                            <h2 class="text-lg font-semibold">Lembar Jawaban PG</h2>
+                            <div class="flex gap-2">
+                                <button type="button" onclick="openCameraModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-1.5 rounded-md text-sm font-medium transition-colors shadow-sm flex items-center">
+                                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                    Buka Kamera Scan
+                                </button>
+                                <button type="button" onclick="clearStudentAnswers()" class="text-red-600 hover:bg-red-50 px-3 py-1.5 rounded-md text-sm font-medium transition-colors border border-red-200">
+                                    Reset
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Progress OCR -->
+                        <div id="ocr-progress" class="hidden mb-4 p-3 bg-indigo-50 text-indigo-700 rounded-lg text-sm flex items-center">
+                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-indigo-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            <span id="ocr-status-text">Memindai gambar LJK... Proses ini mungkin memakan waktu.</span>
+                        </div>
+
+                        <!-- Manual Grid -->
+                        <div class="answer-grid" id="student-answer-grid">
+                            <!-- Injected via JS -->
+                        </div>
+
+                        <div class="mt-6 flex justify-end">
+                            <button onclick="processLJK()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium shadow-sm transition-colors flex items-center">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                Analisis & Simpan
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RESULTS TAB -->
+            <div id="content-results" class="hidden space-y-6">
+                <div class="bg-white shadow rounded-xl overflow-hidden flex flex-col h-[calc(100vh-12rem)]">
+                    <div class="p-6 border-b flex justify-between items-center bg-gray-50">
+                        <h2 class="text-lg font-semibold text-gray-800">Rekapitulasi Analisis Siswa</h2>
+                        <button onclick="exportToExcel()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md font-medium shadow-sm transition-colors flex items-center text-sm">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            Export ke Excel
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto flex-1 p-0">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50 sticky top-0 shadow-sm z-10">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kelas</th>
+                                    <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">PG (B/S)</th>
+                                    <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Total Nilai</th>
+                                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="results-table-body" class="bg-white divide-y divide-gray-200">
+                                <!-- Data injected via JS -->
+                            </tbody>
+                        </table>
+                        
+                        <div id="empty-state" class="hidden flex flex-col items-center justify-center py-12 text-gray-500">
+                            <svg class="w-12 h-12 mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
+                            <p>Belum ada data siswa yang diproses.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SETTINGS TAB -->
+            <div id="content-settings" class="hidden space-y-6">
+                <div class="bg-white shadow rounded-xl p-6">
+                    <div class="flex flex-wrap justify-between items-center gap-3 mb-4 border-b pb-2">
+                        <h2 class="text-lg font-semibold text-gray-800">Master Kunci Jawaban</h2>
+                        <div class="flex items-center gap-4">
+                            <div class="flex items-center">
+                                <label class="text-sm font-medium text-gray-700 mr-2">Jumlah Soal:</label>
+                                <input type="number" id="input-total-questions" min="1" max="200" value="40" class="w-20 p-1.5 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500 text-sm text-center" onchange="changeTotalQuestions(this.value)">
+                            </div>
+                            <button onclick="saveAnswerKey()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium shadow-sm transition-colors text-sm">
+                                Simpan Kunci
+                            </button>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-500 mb-6">Masukkan kunci jawaban untuk soal pilihan ganda (A, B, C, D, atau E). Klik <strong>Simpan Kunci</strong> untuk menyimpan pengaturan ke database Firebase.</p>
+                    
+                    <div class="answer-grid" id="answer-key-grid">
+                        <!-- Injected via JS -->
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Detail Modal -->
+    <div id="detail-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+            <div class="px-6 py-4 border-b flex justify-between items-center">
+                <h3 class="text-lg font-semibold" id="modal-title">Analisis Jawaban Siswa</h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto" id="modal-content">
+                <!-- Injected via JS -->
+            </div>
+            <div class="px-6 py-4 border-t bg-gray-50 flex justify-end">
+                <button onclick="closeModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md font-medium transition-colors">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Live Camera Scanner Modal -->
+    <div id="camera-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-xl w-full overflow-hidden flex flex-col">
+            <div class="px-5 py-3.5 border-b flex justify-between items-center bg-gray-50">
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse"></span>
+                    <h3 class="text-base sm:text-lg font-semibold text-gray-800">Kamera Pemindai LJK</h3>
+                </div>
+                <button type="button" onclick="closeCameraModal()" class="text-gray-400 hover:text-gray-600 p-1 rounded-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <!-- Live Video Feed with LJK Alignment Guide -->
+            <div class="relative bg-black aspect-[3/4] sm:aspect-[4/3] w-full overflow-hidden flex items-center justify-center">
+                <video id="camera-video" autoplay playsinline class="w-full h-full object-cover"></video>
+                
+                <!-- Framing Guide Overlay -->
+                <div class="absolute inset-4 sm:inset-6 border-2 border-dashed border-blue-400/80 rounded-xl pointer-events-none flex flex-col justify-between p-3">
+                    <div class="bg-black/60 text-white text-[11px] sm:text-xs px-2.5 py-1 rounded-md self-center text-center">
+                        Posisikan bagian <strong>Nama, Kelas & Kotak Jawaban</strong> di dalam bingkai
+                    </div>
+                    <div class="flex justify-between items-end">
+                        <span class="w-4 h-4 border-b-2 border-l-2 border-blue-400"></span>
+                        <span class="w-4 h-4 border-b-2 border-r-2 border-blue-400"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hidden Canvas for Frame Capture -->
+            <canvas id="camera-canvas" class="hidden"></canvas>
+
+            <!-- Camera Controls -->
+            <div class="px-5 py-4 bg-gray-50 border-t flex flex-wrap items-center justify-between gap-3">
+                <button type="button" onclick="switchCamera()" class="bg-white hover:bg-gray-100 text-gray-700 border border-gray-300 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-colors flex items-center">
+                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    Putar Kamera
+                </button>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="closeCameraModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors">
+                        Batal
+                    </button>
+                    <button type="button" onclick="captureAndScan()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold shadow-md transition-colors flex items-center">
+                        <svg class="w-5 h-5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        Potret & Scan
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- FIREBASE & APP LOGIC -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global State
+        let totalQuestions = 40;
+        let db = null;
+        let auth = null;
+        let userId = null;
+        let appId = 'ljk-scanner-local';
+        let masterAnswerKey = Array(totalQuestions).fill('');
+        let studentResults = [];
+
+        // Initialize Firebase
+        try {
+            appId = typeof __app_id !== 'undefined' ? __app_id : 'ljk-scanner-local';
+            const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+            
+            if (!firebaseConfig) {
+                throw new Error("Firebase config tidak ditemukan.");
+            }
+
+            const app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+            
+            initAuth();
+        } catch (e) {
+            console.error("Firebase Error:", e);
+            document.getElementById('user-status').innerHTML = `<span class="text-amber-600 font-medium">Mode Lokal (Offline)</span>`;
+            showToast("Gagal menginisialisasi database cloud. Periksa konfigurasi Firebase.", "error");
+            hideLoading();
+        }
+
+        async function initAuth() {
+            try {
+                const customToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+                let userCredential;
+                
+                if (customToken) {
+                    userCredential = await signInWithCustomToken(auth, customToken);
+                } else {
+                    userCredential = await signInAnonymously(auth);
+                }
+                
+                userId = userCredential.user.uid;
+                document.getElementById('user-status').innerHTML = `<span class="text-green-600 flex items-center"><span class="w-2 h-2 bg-green-500 rounded-full mr-1.5"></span> Terhubung</span>`;
+                
+                loadInitialData();
+            } catch (error) {
+                console.error("Auth Error:", error);
+                document.getElementById('user-status').innerHTML = `<span class="text-red-600">Gagal Terhubung</span>`;
+                showToast("Gagal autentikasi dengan server Firebase.", "error");
+                hideLoading();
+            }
+        }
+
+        function loadInitialData() {
+            if (!userId || !db) return;
+
+            // Load Master Key
+            const keyRef = doc(db, 'artifacts', appId, 'users', userId, 'settings', 'answerKey');
+            getDoc(keyRef).then(docSnap => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    if (data.total) {
+                        totalQuestions = parseInt(data.total, 10) || 40;
+                        const inputTotal = document.getElementById('input-total-questions');
+                        if (inputTotal) inputTotal.value = totalQuestions;
+                    }
+                    if (Array.isArray(data.key)) {
+                        masterAnswerKey = [...data.key];
+                        while (masterAnswerKey.length < totalQuestions) {
+                            masterAnswerKey.push('');
+                        }
+                    }
+                    setupUI();
+                    renderAnswerKeyGrid();
+                }
+            }).catch(e => console.error("Error loading key:", e));
+
+            // Listen to Results
+            const resultsRef = collection(db, 'artifacts', appId, 'users', userId, 'results');
+            onSnapshot(resultsRef, (snapshot) => {
+                studentResults = [];
+                snapshot.forEach((docSnap) => {
+                    studentResults.push({ id: docSnap.id, ...docSnap.data() });
+                });
+                // Sort by timestamp descending
+                studentResults.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                renderResultsTable();
+                hideLoading();
+            }, (error) => {
+                console.error("Error fetching results:", error);
+                hideLoading();
+            });
+        }
+
+        // UI SETUP
+        function setupUI() {
+            const keyContainer = document.getElementById('answer-key-grid');
+            const studentContainer = document.getElementById('student-answer-grid');
+            
+            keyContainer.innerHTML = '';
+            studentContainer.innerHTML = '';
+
+            for (let i = 0; i < totalQuestions; i++) {
+                const currentKeyVal = masterAnswerKey[i] || '';
+
+                // Settings grid
+                keyContainer.innerHTML += `
+                    <div class="flex flex-col items-center">
+                        <label class="text-xs text-gray-500 font-medium mb-1">${i + 1}</label>
+                        <input type="text" id="key-${i}" maxlength="1" 
+                               class="answer-input w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500" 
+                               oninput="validateInput(this, true, ${i})" value="${currentKeyVal}">
+                    </div>
+                `;
+
+                // Student scan grid
+                studentContainer.innerHTML += `
+                    <div class="flex flex-col items-center">
+                        <label class="text-xs text-gray-500 font-medium mb-1">${i + 1}</label>
+                        <input type="text" id="ans-${i}" maxlength="1" 
+                               class="answer-input w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500" 
+                               oninput="validateInput(this, false, ${i})">
+                    </div>
+                `;
+            }
+        }
+
+        // TAB NAVIGATION
+        window.switchTab = (tabName) => {
+            const tabs = ['scan', 'results', 'settings'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`tab-${t}`);
+                const content = document.getElementById(`content-${t}`);
+                if (t === tabName) {
+                    btn.className = 'tab-active whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm';
+                    content.classList.remove('hidden');
+                    content.classList.add('block');
+                } else {
+                    btn.className = 'tab-inactive whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm';
+                    content.classList.remove('block');
+                    content.classList.add('hidden');
+                }
+            });
+        };
+
+        // INPUT VALIDATION & AUTO-ADVANCE
+        window.validateInput = (input, isKey, index) => {
+            const cleaned = input.value.replace(/[^ABCDEabcde]/g, '').toUpperCase();
+            input.value = cleaned;
+
+            if (isKey) {
+                masterAnswerKey[index] = cleaned;
+            }
+
+            // Pindah otomatis ke kotak nomor berikutnya jika sudah terisi
+            if (cleaned.length === 1 && index + 1 < totalQuestions) {
+                const nextPrefix = isKey ? 'key-' : 'ans-';
+                const nextEl = document.getElementById(`${nextPrefix}${index + 1}`);
+                if (nextEl) nextEl.focus();
+            }
+        };
+
+        // CHANGE TOTAL QUESTIONS
+        window.changeTotalQuestions = (val) => {
+            let num = parseInt(val, 10);
+            if (isNaN(num) || num < 1) num = 1;
+            if (num > 200) num = 200;
+
+            const inputEl = document.getElementById('input-total-questions');
+            if (inputEl) inputEl.value = num;
+
+            // Simpan nilai kunci yang sedang diketik sebelum merender ulang grid
+            for (let i = 0; i < totalQuestions; i++) {
+                const existingEl = document.getElementById(`key-${i}`);
+                if (existingEl) {
+                    masterAnswerKey[i] = existingEl.value.toUpperCase();
+                }
+            }
+
+            totalQuestions = num;
+            while (masterAnswerKey.length < totalQuestions) {
+                masterAnswerKey.push('');
+            }
+
+            setupUI();
+            showToast(`Jumlah soal diubah menjadi ${totalQuestions} nomor.`, "info");
+        };
+
+        // SAVE MASTER ANSWER KEY TO FIREBASE
+        window.saveAnswerKey = async () => {
+            if (!userId || !db) {
+                return showToast("Tidak terhubung ke database Firebase.", "error");
+            }
+
+            const keyToSave = [];
+            for (let i = 0; i < totalQuestions; i++) {
+                const el = document.getElementById(`key-${i}`);
+                const val = el ? el.value.replace(/[^ABCDEabcde]/g, '').toUpperCase() : '';
+                masterAnswerKey[i] = val;
+                keyToSave.push(val);
+            }
+
+            try {
+                const keyRef = doc(db, 'artifacts', appId, 'users', userId, 'settings', 'answerKey');
+                await setDoc(keyRef, {
+                    total: totalQuestions,
+                    key: keyToSave,
+                    updatedAt: Date.now()
+                });
+                showToast(`Kunci jawaban (${totalQuestions} soal) berhasil disimpan!`, "success");
+            } catch (error) {
+                console.error("Save key error:", error);
+                showToast("Gagal menyimpan kunci jawaban ke database.", "error");
+            }
+        };
+
+        // CLEAR STUDENT ANSWERS
+        window.clearStudentAnswers = () => {
+            for (let i = 0; i < totalQuestions; i++) {
+                const el = document.getElementById(`ans-${i}`);
+                if (el) el.value = '';
+            }
+            document.getElementById('student-form').reset();
+            document.getElementById('nama').focus();
+        };
+
+        // LIVE CAMERA CONTROLS & SCANNING (OCR)
+        let cameraStream = null;
+        let currentFacingMode = 'environment'; // Default kamera belakang pada HP
+
+        async function startCameraStream() {
+            stopCameraStream();
+            const videoEl = document.getElementById('camera-video');
+            try {
+                cameraStream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: { ideal: currentFacingMode },
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 }
+                    },
+                    audio: false
+                });
+                videoEl.srcObject = cameraStream;
+            } catch (err) {
+                console.error("Camera access error:", err);
+                closeCameraModal();
+                showToast("Tidak dapat mengakses kamera. Pastikan izin kamera diaktifkan.", "error");
+            }
+        }
+
+        function stopCameraStream() {
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
+                cameraStream = null;
+            }
+            const videoEl = document.getElementById('camera-video');
+            if (videoEl) videoEl.srcObject = null;
+        }
+
+        window.openCameraModal = async () => {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                showToast("Browser Anda tidak mendukung akses kamera langsung.", "error");
+                return;
+            }
+            document.getElementById('camera-modal').classList.remove('hidden');
+            await startCameraStream();
+        };
+
+        window.switchCamera = async () => {
+            currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
+            await startCameraStream();
+        };
+
+        window.closeCameraModal = () => {
+            stopCameraStream();
+            document.getElementById('camera-modal').classList.add('hidden');
+        };
+
+        window.captureAndScan = async () => {
+            const videoEl = document.getElementById('camera-video');
+            const canvasEl = document.getElementById('camera-canvas');
+
+            if (!videoEl.videoWidth || !videoEl.videoHeight) {
+                showToast("Kamera belum siap, silakan tunggu sebentar.", "error");
+                return;
+            }
+
+            // Ambil resolusi asli dari frame kamera
+            canvasEl.width = videoEl.videoWidth;
+            canvasEl.height = videoEl.videoHeight;
+            const ctx = canvasEl.getContext('2d');
+            ctx.drawImage(videoEl, 0, 0, canvasEl.width, canvasEl.height);
+
+            // Tingkatkan kontras & grayscale agar tulisan LJK lebih mudah terbaca oleh OCR
+            const imgData = ctx.getImageData(0, 0, canvasEl.width, canvasEl.height);
+            const data = imgData.data;
+            const contrast = 1.25;
+            const intercept = 128 * (1 - contrast);
+            for (let i = 0; i < data.length; i += 4) {
+                const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+                const adjusted = Math.min(255, Math.max(0, gray * contrast + intercept));
+                data[i] = data[i + 1] = data[i + 2] = adjusted;
+            }
+            ctx.putImageData(imgData, 0, 0);
+
+            // Tutup kamera & mulai proses OCR
+            closeCameraModal();
+            await processOCRCanvas(canvasEl);
+        };
+
+        async function processOCRCanvas(canvasSource) {
+            const progressDiv = document.getElementById('ocr-progress');
+            const statusText = document.getElementById('ocr-status-text');
+            
+            progressDiv.classList.remove('hidden');
+            statusText.textContent = 'Memuat mesin OCR...';
+
+            try {
+                // Tesseract.js v5 initialization for English and Indonesian
+                const worker = await Tesseract.createWorker('eng+ind', 1, {
+                    logger: m => {
+                        if (m.status === 'recognizing text') {
+                            statusText.textContent = `Memindai hasil foto LJK... ${Math.round(m.progress * 100)}%`;
+                        }
+                    }
+                });
+                
+                statusText.textContent = 'Menganalisis identitas dan kotak jawaban...';
+                const result = await worker.recognize(canvasSource);
+                const fullText = result.data.text;
+                
+                // Ekstraksi Nama dan Kelas menggunakan Regex berdasarkan format LJK
+                const nameMatch = fullText.match(/NAMA\s*[:;]?\s*([^\n]+)/i);
+                const classMatch = fullText.match(/KELAS\s*[:;]?\s*([^\n]+)/i);
+
+                let identityFound = [];
+                if (nameMatch && nameMatch[1]) {
+                    const cleanName = nameMatch[1].trim().replace(/[^a-zA-Z\s.]/g, '').trim();
+                    if (cleanName) {
+                        document.getElementById('nama').value = cleanName;
+                        identityFound.push("Nama");
+                    }
+                }
+                if (classMatch && classMatch[1]) {
+                    const cleanClass = classMatch[1].trim().replace(/[^a-zA-Z0-9\s-]/g, '').trim();
+                    if (cleanClass) {
+                        document.getElementById('kelas').value = cleanClass;
+                        identityFound.push("Kelas");
+                    }
+                }
+
+                // Bersihkan teks header/identitas agar tidak dianggap sebagai jawaban PG
+                let answersText = fullText;
+                if (nameMatch) answersText = answersText.replace(nameMatch[0], '');
+                if (classMatch) answersText = answersText.replace(classMatch[0], '');
+
+                // Ekstraksi jawaban PG (Hanya mengambil A, B, C, D, E)
+                const text = answersText.replace(/[^ABCDE]/gi, '').toUpperCase();
+                
+                if (text.length === 0) {
+                    showToast("Tidak ada huruf jawaban yang terbaca. Coba foto yang lebih jelas.", "error");
+                } else {
+                    let filledCount = 0;
+                    for (let i = 0; i < totalQuestions && i < text.length; i++) {
+                        const el = document.getElementById(`ans-${i}`);
+                        if (el) {
+                            el.value = text[i];
+                            filledCount++;
+                        }
+                    }
+                    
+                    let msg = `Berhasil membaca ${filledCount} jawaban.`;
+                    if (identityFound.length > 0) {
+                        msg += ` Identitas (${identityFound.join(', ')}) terdeteksi otomatis.`;
+                    }
+                    showToast(msg, "success");
+                }
+
+                await worker.terminate();
+            } catch (error) {
+                console.error("OCR Error:", error);
+                showToast("Terjadi kesalahan saat memproses gambar LJK.", "error");
+            } finally {
+                progressDiv.classList.add('hidden');
+            }
+        }
+
+        // PROCESSING & GRADING
+        window.processLJK = async () => {
+            if (!userId || !db) return showToast("Tidak terhubung ke database.", "error");
+            
+            const form = document.getElementById('student-form');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            // Check if Key exists
+            if (masterAnswerKey.slice(0, totalQuestions).filter(k => k !== '').length === 0) {
+                showToast("Kunci Jawaban kosong! Harap isi di tab Pengaturan Kunci.", "error");
+                return;
+            }
+
+            const studentAnswers = [];
+            for (let i = 0; i < totalQuestions; i++) {
+                const el = document.getElementById(`ans-${i}`);
+                studentAnswers.push(el ? (el.value.toUpperCase() || '-') : '-');
+            }
+
+            let benar = 0;
+            let salah = 0;
+            let kosong = 0;
+            let analisis = [];
+
+            for (let i = 0; i < totalQuestions; i++) {
+                const k = masterAnswerKey[i] || '';
+                const a = studentAnswers[i];
+                
+                let status = 0; // 0 = salah/kosong, 1 = benar
+                if (a === '-') {
+                    kosong++;
+                } else if (k !== '' && a === k) {
+                    benar++;
+                    status = 1;
+                } else {
+                    salah++;
+                }
+                
+                analisis.push({ 
+                    no: i + 1, 
+                    kunci: k, 
+                    jawab: a, 
+                    isBenar: status === 1 
+                });
+            }
+
+            // Scoring system: (Benar / Jumlah Kunci Terisi) * 100
+            const maxPG = masterAnswerKey.slice(0, totalQuestions).filter(k => k !== '').length || totalQuestions;
+            let nilaiPG = (benar / maxPG) * 100;
+            nilaiPG = Math.round(nilaiPG * 100) / 100;
+            
+            const totalNilai = nilaiPG;
+
+            const data = {
+                nama: document.getElementById('nama').value.trim(),
+                kelas: document.getElementById('kelas').value.trim(),
+                totalSoal: totalQuestions,
+                jawaban: studentAnswers,
+                analisis: analisis,
+                rekap: { benar, salah, kosong },
+                nilaiPG: nilaiPG,
+                totalNilai: totalNilai,
+                timestamp: Date.now()
+            };
+
+            try {
+                const resultsRef = collection(db, 'artifacts', appId, 'users', userId, 'results');
+                await addDoc(resultsRef, data);
+                
+                showToast(`Sukses! Nilai ${data.nama}: ${totalNilai}`, "success");
+                clearStudentAnswers();
+            } catch (error) {
+                console.error("Save result error:", error);
+                showToast("Gagal menyimpan hasil ke database.", "error");
+            }
+        };
+
+        // RENDERING RESULTS
+        function renderResultsTable() {
+            const tbody = document.getElementById('results-table-body');
+            const emptyState = document.getElementById('empty-state');
+            
+            tbody.innerHTML = '';
+            
+            if (studentResults.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            
+            emptyState.classList.add('hidden');
+            
+            studentResults.forEach((res, index) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50 transition-colors";
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${studentResults.length - index}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${res.nama}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${res.kelas}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
+                        <span class="text-green-600 font-bold">${res.rekap.benar}</span> / <span class="text-red-500">${res.rekap.salah}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-center font-bold text-gray-900 bg-gray-50">${res.totalNilai}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button onclick="viewDetail('${res.id}')" class="text-blue-600 hover:text-blue-900 mr-3">Detail</button>
+                        <button onclick="deleteResult('${res.id}')" class="text-red-600 hover:text-red-900">Hapus</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        window.viewDetail = (id) => {
+            const res = studentResults.find(r => r.id === id);
+            if (!res) return;
+
+            document.getElementById('modal-title').textContent = `Analisis: ${res.nama} - Kelas ${res.kelas}`;
+            
+            let html = `
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-blue-50 p-3 rounded-lg text-center">
+                        <div class="text-xs text-blue-500 font-medium">Nilai Total</div>
+                        <div class="text-2xl font-bold text-blue-700">${res.totalNilai}</div>
+                    </div>
+                    <div class="bg-green-50 p-3 rounded-lg text-center">
+                        <div class="text-xs text-green-500 font-medium">Jawaban Benar</div>
+                        <div class="text-xl font-bold text-green-700">${res.rekap.benar}</div>
+                    </div>
+                    <div class="bg-red-50 p-3 rounded-lg text-center">
+                        <div class="text-xs text-red-500 font-medium">Jawaban Salah</div>
+                        <div class="text-xl font-bold text-red-700">${res.rekap.salah}</div>
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded-lg text-center">
+                        <div class="text-xs text-gray-500 font-medium">Tidak Dijawab</div>
+                        <div class="text-xl font-bold text-gray-700">${res.rekap.kosong}</div>
+                    </div>
+                </div>
+
+                <h4 class="font-medium text-gray-700 mb-3 border-b pb-1">Distribusi Jawaban</h4>
+                <div class="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2">
+            `;
+
+            res.analisis.forEach(item => {
+                const bgClass = item.isBenar ? 'bg-green-100 border-green-300 text-green-800' : 'bg-red-100 border-red-300 text-red-800';
+                const ans = item.jawab === '-' ? 'Ø' : item.jawab;
+                html += `
+                    <div class="border rounded text-center p-1 ${bgClass} relative group cursor-help">
+                        <div class="text-[10px] text-gray-500">${item.no}</div>
+                        <div class="font-bold text-sm">${ans}</div>
+                        
+                        <!-- tooltip -->
+                        <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 hidden group-hover:block bg-gray-800 text-white text-xs px-2 py-1 rounded w-max z-10">
+                            Kunci: ${item.kunci || 'Kosong'}
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `</div>`;
+            document.getElementById('modal-content').innerHTML = html;
+            document.getElementById('detail-modal').classList.remove('hidden');
+        };
+
+        window.closeModal = () => {
+            document.getElementById('detail-modal').classList.add('hidden');
+        };
+
+        window.deleteResult = async (id) => {
+            if (!confirm("Yakin ingin menghapus data siswa ini?")) return;
+            try {
+                await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'results', id));
+                showToast("Data berhasil dihapus", "success");
+            } catch (e) {
+                showToast("Gagal menghapus data", "error");
+            }
+        };
+
+        // EXCEL EXPORT
+        window.exportToExcel = () => {
+            if (studentResults.length === 0) return showToast("Tidak ada data untuk diekspor", "error");
+
+            const headers = ['No', 'Nama', 'Kelas'];
+            for (let i = 1; i <= totalQuestions; i++) headers.push(`Soal ${i}`);
+            headers.push('Total Benar', 'Total Salah', 'Kosong', 'Total Nilai');
+
+            // Sheet 1: Rekap Jawaban Siswa
+            const rowsJawaban = studentResults.map((res, index) => {
+                const row = [index + 1, res.nama, res.kelas];
+                for (let i = 0; i < totalQuestions; i++) {
+                    const item = res.analisis[i];
+                    row.push(item ? item.jawab : '-');
+                }
+                row.push(res.rekap.benar, res.rekap.salah, res.rekap.kosong, res.totalNilai);
+                return row;
+            });
+
+            const keyRow = ['-', 'KUNCI JAWABAN', '-'];
+            for (let i = 0; i < totalQuestions; i++) keyRow.push(masterAnswerKey[i] || '-');
+            keyRow.push('-', '-', '-', '-');
+            
+            rowsJawaban.unshift(keyRow);
+            rowsJawaban.unshift(headers);
+
+            // Sheet 2: Analisis Benar / Salah per Nomor (B = Benar, S = Salah, - = Kosong)
+            const rowsAnalisis = studentResults.map((res, index) => {
+                const row = [index + 1, res.nama, res.kelas];
+                for (let i = 0; i < totalQuestions; i++) {
+                    const item = res.analisis[i];
+                    if (!item || item.jawab === '-') {
+                        row.push('-');
+                    } else {
+                        row.push(item.isBenar ? 'B' : 'S');
+                    }
+                }
+                row.push(res.rekap.benar, res.rekap.salah, res.rekap.kosong, res.totalNilai);
+                return row;
+            });
+            rowsAnalisis.unshift(headers);
+
+            const workbook = XLSX.utils.book_new();
+            const wsJawaban = XLSX.utils.aoa_to_sheet(rowsJawaban);
+            const wsAnalisis = XLSX.utils.aoa_to_sheet(rowsAnalisis);
+
+            XLSX.utils.book_append_sheet(workbook, wsJawaban, "Rekap Jawaban");
+            XLSX.utils.book_append_sheet(workbook, wsAnalisis, "Analisis Benar-Salah");
+
+            XLSX.writeFile(workbook, "Hasil_Analisis_LJK.xlsx");
+        };
+
+        // UTILITIES
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const msgEl = document.getElementById('toast-message');
+            const iconEl = document.getElementById('toast-icon');
+            
+            toast.classList.remove('translate-x-full');
+            msgEl.textContent = message;
+            
+            if (type === 'success') {
+                toast.className = "fixed top-4 right-4 z-50 transform transition-transform duration-300 bg-white shadow-lg rounded-lg border-l-4 border-green-500 p-4 min-w-[300px]";
+                iconEl.innerHTML = `<svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
+            } else if (type === 'error') {
+                toast.className = "fixed top-4 right-4 z-50 transform transition-transform duration-300 bg-white shadow-lg rounded-lg border-l-4 border-red-500 p-4 min-w-[300px]";
+                iconEl.innerHTML = `<svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>`;
+            } else {
+                toast.className = "fixed top-4 right-4 z-50 transform transition-transform duration-300 bg-white shadow-lg rounded-lg border-l-4 border-blue-500 p-4 min-w-[300px]";
+                iconEl.innerHTML = `<svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+            }
+
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+            }, 3000);
+        }
+
+        function hideLoading() {
+            const overlay = document.getElementById('loading-overlay');
+            overlay.classList.add('opacity-0');
+            setTimeout(() => overlay.classList.add('hidden'), 300);
+        }
+
+        function renderAnswerKeyGrid() {
+            for (let i = 0; i < totalQuestions; i++) {
+                const el = document.getElementById(`key-${i}`);
+                if (el) el.value = masterAnswerKey[i] || '';
+            }
+        }
+
+        // Initialize UI immediately
+        setupUI();
+    </script>
+</body>
+</html>
