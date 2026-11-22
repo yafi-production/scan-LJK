@@ -27,7 +27,6 @@
         ::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
         
         .answer-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 0.5rem; }
-        .key-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(74px, 1fr)); gap: 0.6rem; }
         .answer-input { text-transform: uppercase; text-align: center; }
     </style>
 </head>
@@ -51,12 +50,12 @@
     </div>
 
     <!-- Header -->
-    <header class="bg-white shadow-sm z-10">
+    <header class="bg-white shadow-sm z-10 flex-shrink-0">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
+            <div class="flex justify-between items-center h-14 sm:h-16">
                 <div class="flex items-center">
-                    <svg class="w-8 h-8 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
-                    <h1 class="text-xl font-bold text-gray-900">EduScan Analisis</h1>
+                    <svg class="w-7 h-7 sm:w-8 sm:h-8 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                    <h1 class="text-lg sm:text-xl font-bold text-gray-900">EduScan Analisis</h1>
                 </div>
                 <div class="text-xs sm:text-sm text-gray-500">
                     <span id="user-status">Menghubungkan...</span>
@@ -66,38 +65,38 @@
     </header>
 
     <!-- Navigation Tabs -->
-    <div class="bg-white border-b border-gray-200">
+    <div class="bg-white border-b border-gray-200 flex-shrink-0">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <nav class="-mb-px flex space-x-5 sm:space-x-8 overflow-x-auto" aria-label="Tabs">
-                <button type="button" onclick="switchTab('scan')" id="tab-scan" class="tab-active whitespace-nowrap py-3.5 sm:py-4 px-1 border-b-2 font-medium text-sm">
+                <button type="button" onclick="switchTab('scan')" id="tab-scan" class="tab-active whitespace-nowrap py-3 sm:py-3.5 px-1 border-b-2 font-medium text-sm">
                     Scan / Input LJK
                 </button>
-                <button type="button" onclick="switchTab('results')" id="tab-results" class="tab-inactive whitespace-nowrap py-3.5 sm:py-4 px-1 border-b-2 font-medium text-sm">
+                <button type="button" onclick="switchTab('results')" id="tab-results" class="tab-inactive whitespace-nowrap py-3 sm:py-3.5 px-1 border-b-2 font-medium text-sm">
                     Hasil & Analisis
                 </button>
-                <button type="button" onclick="switchTab('settings')" id="tab-settings" class="tab-inactive whitespace-nowrap py-3.5 sm:py-4 px-1 border-b-2 font-medium text-sm">
+                <button type="button" onclick="switchTab('settings')" id="tab-settings" class="tab-inactive whitespace-nowrap py-3 sm:py-3.5 px-1 border-b-2 font-medium text-sm">
                     Pengaturan Kunci
                 </button>
             </nav>
         </div>
     </div>
 
-    <!-- Main Content -->
-    <main class="flex-1 overflow-y-auto bg-gray-50 p-4 pb-28 sm:p-6 sm:pb-28 lg:p-8">
+    <!-- Main Content (extra bottom padding so sticky mobile buttons never obscure last rows) -->
+    <main class="flex-1 overflow-y-auto bg-gray-50 p-4 pb-32 sm:p-6 sm:pb-32 lg:p-8 lg:pb-10">
         <div class="max-w-7xl mx-auto">
 
             <!-- SCAN / INPUT TAB -->
             <div id="content-scan" class="space-y-6 block">
                 
-                <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+                <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
                     <div class="flex">
                         <div class="flex-shrink-0">
                             <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
                         </div>
                         <div class="ml-3">
                             <h3 class="text-sm font-medium text-blue-800">Petunjuk Penggunaan</h3>
-                            <div class="mt-2 text-sm text-blue-700">
-                                <p>Pastikan <strong>Pengaturan Kunci Jawaban</strong> sudah diisi sebelum memproses LJK. Tekan <em>Buka Kamera Scan</em>, lalu paskan baris <strong>NAMA & KELAS</strong> pada kotak garis atas dan <strong>Tabel Jawaban PG (1–40)</strong> pada kotak garis bawah.</p>
+                            <div class="mt-1 text-xs sm:text-sm text-blue-700">
+                                <p>Pastikan <strong>Pengaturan Kunci Jawaban</strong> sudah diisi sebelum memproses LJK. Tekan <em>Buka Kamera Scan</em>, lalu paskan baris <strong>NAMA & KELAS</strong> pada kotak garis atas dan <strong>Tabel Jawaban PG</strong> pada kotak garis bawah.</p>
                             </div>
                         </div>
                     </div>
@@ -106,7 +105,7 @@
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     
                     <!-- Data Siswa Form -->
-                    <div class="bg-white shadow rounded-xl p-6 lg:col-span-1">
+                    <div class="bg-white shadow rounded-xl p-5 sm:p-6 lg:col-span-1">
                         <h2 class="text-lg font-semibold mb-4 border-b pb-2">Identitas Siswa</h2>
                         <form id="student-form" onsubmit="event.preventDefault(); processLJK();" class="space-y-4">
                             <div>
@@ -121,7 +120,7 @@
                     </div>
 
                     <!-- Input Jawaban -->
-                    <div class="bg-white shadow rounded-xl p-6 lg:col-span-2">
+                    <div class="bg-white shadow rounded-xl p-5 sm:p-6 lg:col-span-2">
                         <div class="flex flex-wrap justify-between items-center gap-2 mb-4 border-b pb-2">
                             <h2 class="text-lg font-semibold">Lembar Jawaban PG</h2>
                             <div class="flex gap-2">
@@ -138,7 +137,7 @@
                         <!-- Progress OCR -->
                         <div id="ocr-progress" class="hidden mb-4 p-3 bg-indigo-50 text-indigo-700 rounded-lg text-sm flex items-center">
                             <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-indigo-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                            <span id="ocr-status-text">Memindai gambar LJK... Proses ini mungkin memakan waktu.</span>
+                            <span id="ocr-status-text">Memindai gambar LJK...</span>
                         </div>
 
                         <!-- Manual Grid -->
@@ -147,8 +146,8 @@
                         </div>
 
                         <!-- Sticky Save Action Bar on Mobile, Normal Button on Desktop -->
-                        <div class="fixed bottom-0 left-0 right-0 z-20 bg-white/95 backdrop-blur-sm border-t border-gray-200 px-4 py-3 pb-4 shadow-[0_-4px_12px_rgba(0,0,0,0.08)] lg:static lg:bg-transparent lg:backdrop-blur-none lg:border-0 lg:p-0 lg:shadow-none lg:mt-6 flex justify-end">
-                            <button type="button" onclick="processLJK()" class="w-full lg:w-auto justify-center bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white px-6 py-3 lg:py-2 rounded-xl lg:rounded-lg font-semibold lg:font-medium shadow-md lg:shadow-sm transition-colors flex items-center text-base lg:text-sm">
+                        <div class="fixed bottom-0 left-0 right-0 z-20 bg-white/95 backdrop-blur-sm border-t border-gray-200 px-4 py-3 shadow-[0_-4px_12px_rgba(0,0,0,0.08)] lg:static lg:bg-transparent lg:backdrop-blur-none lg:border-0 lg:p-0 lg:shadow-none lg:mt-6 flex justify-end">
+                            <button type="button" onclick="processLJK()" class="w-full lg:w-auto justify-center bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white px-6 py-2.5 lg:py-2 rounded-xl lg:rounded-lg font-semibold lg:font-medium shadow-md lg:shadow-sm transition-colors flex items-center text-sm sm:text-base lg:text-sm">
                                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                 Analisis & Simpan
                             </button>
@@ -175,7 +174,7 @@
                                     <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
                                     <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kelas</th>
                                     <th scope="col" class="px-4 sm:px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">PG (B/S)</th>
-                                    <th scope="col" class="px-4 sm:px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Total Nilai</th>
+                                    <th scope="col" class="px-4 sm:px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Nilai (0–100)</th>
                                     <th scope="col" class="px-4 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                                 </tr>
                             </thead>
@@ -194,11 +193,11 @@
 
             <!-- SETTINGS TAB -->
             <div id="content-settings" class="hidden space-y-6">
-                <div class="bg-white shadow rounded-xl p-6">
+                <div class="bg-white shadow rounded-xl p-5 sm:p-6">
                     <div class="flex flex-wrap justify-between items-center gap-3 mb-4 border-b pb-3">
                         <div>
-                            <h2 class="text-lg font-semibold text-gray-800">Master Kunci Jawaban & Skor</h2>
-                            <p class="text-xs text-blue-600 font-medium mt-0.5">Total Skor Maksimal: <span id="total-max-score" class="font-bold">100</span> Poin</p>
+                            <h2 class="text-lg font-semibold text-gray-800">Master Kunci Jawaban</h2>
+                            <p class="text-xs text-gray-500 mt-0.5">Isi huruf kunci (A–E) pada masing-masing nomor soal. Nilai otomatis dihitung skala 100.</p>
                         </div>
                         <div class="flex flex-wrap items-center gap-3">
                             <div class="flex items-center">
@@ -210,30 +209,63 @@
                             </button>
                         </div>
                     </div>
-
-                    <!-- Pengaturan Skor Massal per Poin -->
-                    <div class="bg-blue-50/70 border border-blue-100 rounded-lg p-3 mb-5 flex flex-wrap items-center justify-between gap-3">
-                        <div class="text-xs sm:text-sm text-gray-700">
-                            <span class="font-semibold text-blue-900">Atur Skor per Poin:</span> Isi bobot nilai pada masing-masing kotak nomor, atau terapkan nilai yang sama ke semua soal.
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <input type="number" id="default-question-score" step="0.1" min="0" value="2.5" class="w-20 p-1.5 border border-blue-300 rounded bg-white text-sm text-center font-medium focus:ring-blue-500 focus:border-blue-500" placeholder="Poin">
-                            <button type="button" onclick="applyScoreToAll()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-xs sm:text-sm font-medium transition-colors shadow-sm">
-                                Terapkan Semua
-                            </button>
-                        </div>
-                    </div>
                     
-                    <div class="key-grid" id="answer-key-grid">
+                    <div class="answer-grid" id="answer-key-grid">
                         <!-- Injected via JS -->
                     </div>
 
                     <!-- Sticky Save Key Bar on Mobile -->
-                    <div class="fixed bottom-0 left-0 right-0 z-20 bg-white/95 backdrop-blur-sm border-t border-gray-200 px-4 py-3 pb-4 shadow-[0_-4px_12px_rgba(0,0,0,0.08)] lg:hidden flex justify-end">
+                    <div class="fixed bottom-0 left-0 right-0 z-20 bg-white/95 backdrop-blur-sm border-t border-gray-200 px-4 py-3 shadow-[0_-4px_12px_rgba(0,0,0,0.08)] lg:hidden flex justify-end">
+                        <button type="button" onclick="saveAnswerKey()" class="w-full justify-center bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white px-6 py-2.5 rounded-xl font-semibold shadow-md transition-colors flex items-center text-sm sm:text-base">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            Simpan Kunci Jawaban
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- DETAIL ANALYSIS MODAL -->
+    <div id="detail-modal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[88vh] flex flex-col overflow-hidden">
+            <div class="px-5 py-4 border-b flex items-center justify-between bg-gray-50">
+                <h3 id="modal-title" class="text-base sm:text-lg font-bold text-gray-900">Detail Analisis</h3>
+                <button type="button" onclick="closeModal()" class="text-gray-400 hover:text-gray-700 p-1 rounded-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div id="modal-content" class="p-5 overflow-y-auto flex-1">
+                <!-- Injected via JS -->
+            </div>
+            <div class="px-5 py-3 border-t bg-gray-50 flex justify-end">
+                <button type="button" onclick="closeModal()" class="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CAMERA SCANNER MODAL -->
+    <div id="camera-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col">
+            
+            <!-- Camera Modal Header -->
+            <div class="px-4 py-3 bg-slate-900 text-white flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    <span class="font-semibold text-sm sm:text-base">Pemindai Kamera LJK</span>
+                </div>
+                <button type="button" onclick="closeCameraModal()" class="text-slate-300 hover:text-white p-1 rounded-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
             <!-- Live Video Feed with Dual-Zone LJK Alignment Guide (Calibrated for LJK ASAS) -->
             <div class="bg-black w-full flex items-center justify-center overflow-hidden">
                 <div class="relative inline-flex items-center justify-center max-w-full">
-                    <video id="camera-video" autoplay playsinline muted class="w-full h-auto max-h-[62vh] object-contain block"></video>
+                    <video id="camera-video" autoplay playsinline muted class="w-full h-auto max-h-[60vh] object-contain block"></video>
                     
                     <!-- Dual-Zone Framing Guide Overlay (LJK ASAS 2026/2027) -->
                     <div id="guide-dual-zone" class="absolute inset-0 pointer-events-none">
@@ -249,8 +281,8 @@
 
                         <!-- Area Jeda Tengah (Melewati Pelajaran, Hari/Tanggal & Judul Rekap A-E) -->
                         <div class="absolute left-[4%] right-[4%] top-[24%] h-[18%] flex items-center justify-center">
-                            <span class="bg-black/65 text-gray-200 text-[10px] px-2.5 py-0.5 rounded-full border border-white/15">
-                                Area tengah (Pelajaran, Tanggal & Judul) dilewati otomatis
+                            <span class="bg-black/65 text-gray-200 text-[10px] px-2.5 py-0.5 rounded-full border border-white/15 text-center">
+                                Area tengah dilewati otomatis
                             </span>
                         </div>
 
@@ -327,7 +359,6 @@
         let unsubscribeResults = null;
         const appId = 'eduscan-eksperimen-8423a';
         let masterAnswerKey = Array(totalQuestions).fill('');
-        let masterQuestionScores = Array(totalQuestions).fill(2.5);
         let studentResults = [];
 
         // Konfigurasi Firebase Project: eksperimen-8423a
@@ -381,8 +412,7 @@
             try {
                 localStorage.setItem(`${appId}_key`, JSON.stringify({
                     total: totalQuestions,
-                    key: masterAnswerKey,
-                    scores: masterQuestionScores
+                    key: masterAnswerKey
                 }));
                 localStorage.setItem(`${appId}_results`, JSON.stringify(studentResults));
             } catch (e) {
@@ -397,7 +427,6 @@
                     const parsed = JSON.parse(rawKey);
                     if (parsed.total) totalQuestions = parsed.total;
                     if (Array.isArray(parsed.key)) masterAnswerKey = parsed.key;
-                    if (Array.isArray(parsed.scores)) masterQuestionScores = parsed.scores;
                 }
                 const rawResults = localStorage.getItem(`${appId}_results`);
                 if (rawResults) {
@@ -419,8 +448,8 @@
                 const panel = document.getElementById(`content-${t}`);
                 if (btn) {
                     btn.className = t === tabName
-                        ? 'tab-active whitespace-nowrap py-3.5 sm:py-4 px-1 border-b-2 font-medium text-sm'
-                        : 'tab-inactive whitespace-nowrap py-3.5 sm:py-4 px-1 border-b-2 font-medium text-sm';
+                        ? 'tab-active whitespace-nowrap py-3 sm:py-3.5 px-1 border-b-2 font-medium text-sm'
+                        : 'tab-inactive whitespace-nowrap py-3 sm:py-3.5 px-1 border-b-2 font-medium text-sm';
                 }
                 if (panel) {
                     panel.classList.toggle('hidden', t !== tabName);
@@ -475,21 +504,14 @@
                 let keyHtml = '';
                 for (let i = 0; i < totalQuestions; i++) {
                     const currentKeyVal = masterAnswerKey[i] || '';
-                    const currentScoreVal = masterQuestionScores[i] !== undefined ? masterQuestionScores[i] : 2.5;
                     keyHtml += `
-                        <div class="flex flex-col items-center bg-gray-50/80 border border-gray-200 rounded-lg p-1.5">
+                        <div class="flex flex-col items-center bg-gray-50 border border-gray-200 rounded-lg p-1.5">
                             <label for="key-${i}" class="text-xs text-gray-600 font-semibold mb-1">${i + 1}</label>
                             <input type="text" id="key-${i}" maxlength="1" 
                                    class="answer-input w-full p-1.5 bg-white border border-gray-300 rounded font-bold text-gray-800 focus:ring-blue-500 focus:border-blue-500" 
                                    oninput="validateInput(this, true, ${i})" 
                                    onkeydown="handleGridKeydown(event, true, ${i})"
                                    value="${currentKeyVal}">
-                            <div class="w-full mt-1.5 flex items-center bg-white border border-blue-200 rounded px-1" title="Skor jika nomor ${i + 1} benar">
-                                <span class="text-[10px] text-gray-400 select-none mr-0.5">Poin</span>
-                                <input type="number" id="score-${i}" step="0.1" min="0"
-                                       class="w-full bg-transparent text-xs text-center font-semibold text-blue-700 py-0.5 focus:outline-none"
-                                       oninput="updateQuestionScore(${i}, this.value)" value="${currentScoreVal}">
-                            </div>
                         </div>
                     `;
                 }
@@ -512,24 +534,17 @@
                 }
                 studentContainer.innerHTML = studentHtml;
             }
-
-            updateTotalMaxScore();
         }
 
         function renderAnswerKeyGrid() {
             for (let i = 0; i < totalQuestions; i++) {
                 const el = document.getElementById(`key-${i}`);
                 if (el) el.value = masterAnswerKey[i] || '';
-                const scoreEl = document.getElementById(`score-${i}`);
-                if (scoreEl && masterQuestionScores[i] !== undefined) {
-                    scoreEl.value = masterQuestionScores[i];
-                }
             }
-            updateTotalMaxScore();
         }
 
         // ==========================================
-        // MASTER KEY & SCORE MANAGEMENT
+        // MASTER KEY MANAGEMENT
         // ==========================================
         window.changeTotalQuestions = (val) => {
             let num = parseInt(val, 10);
@@ -542,71 +557,28 @@
             for (let i = 0; i < totalQuestions; i++) {
                 const existingEl = document.getElementById(`key-${i}`);
                 if (existingEl) masterAnswerKey[i] = existingEl.value.toUpperCase();
-                const existingScoreEl = document.getElementById(`score-${i}`);
-                if (existingScoreEl) masterQuestionScores[i] = parseFloat(existingScoreEl.value) || 0;
             }
 
             totalQuestions = num;
-            const defaultScore = parseFloat(document.getElementById('default-question-score')?.value) || +(100 / totalQuestions).toFixed(2);
             while (masterAnswerKey.length < totalQuestions) masterAnswerKey.push('');
-            while (masterQuestionScores.length < totalQuestions) masterQuestionScores.push(defaultScore);
 
             setupUI();
             showToast(`Jumlah soal diubah menjadi ${totalQuestions} nomor.`, "info");
         };
 
-        window.updateQuestionScore = (index, val) => {
-            const parsed = parseFloat(val);
-            masterQuestionScores[index] = isNaN(parsed) || parsed < 0 ? 0 : parsed;
-            updateTotalMaxScore();
-        };
-
-        window.applyScoreToAll = () => {
-            const inputDefault = document.getElementById('default-question-score');
-            const val = parseFloat(inputDefault ? inputDefault.value : 0);
-            if (isNaN(val) || val < 0) {
-                return showToast("Masukkan angka skor yang valid (minimal 0).", "error");
-            }
-
-            for (let i = 0; i < totalQuestions; i++) {
-                masterQuestionScores[i] = val;
-                const scoreEl = document.getElementById(`score-${i}`);
-                if (scoreEl) scoreEl.value = val;
-            }
-            updateTotalMaxScore();
-            showToast(`Skor ${val} poin diterapkan ke semua (${totalQuestions}) soal.`, "success");
-        };
-
-        function updateTotalMaxScore() {
-            let sum = 0;
-            for (let i = 0; i < totalQuestions; i++) {
-                sum += parseFloat(masterQuestionScores[i]) || 0;
-            }
-            const rounded = Math.round(sum * 100) / 100;
-            const badge = document.getElementById('total-max-score');
-            if (badge) badge.textContent = rounded;
-        }
-
         window.saveAnswerKey = async () => {
             const keyToSave = [];
-            const scoresToSave = [];
             for (let i = 0; i < totalQuestions; i++) {
                 const el = document.getElementById(`key-${i}`);
                 const val = el ? el.value.replace(/[^ABCDEabcde]/g, '').toUpperCase() : '';
                 masterAnswerKey[i] = val;
                 keyToSave.push(val);
-
-                const scoreEl = document.getElementById(`score-${i}`);
-                const scoreVal = scoreEl ? (parseFloat(scoreEl.value) || 0) : (masterQuestionScores[i] || 0);
-                masterQuestionScores[i] = scoreVal;
-                scoresToSave.push(scoreVal);
             }
 
             saveLocalBackup();
-            updateTotalMaxScore();
 
             if (!isCloudReady || !userId || !db) {
-                return showToast("Kunci & skor tersimpan lokal (mode offline).", "info");
+                return showToast("Kunci jawaban tersimpan lokal (mode offline).", "info");
             }
 
             try {
@@ -614,10 +586,9 @@
                 await setDoc(keyRef, {
                     total: totalQuestions,
                     key: keyToSave,
-                    scores: scoresToSave,
                     updatedAt: Date.now()
                 });
-                showToast(`Kunci jawaban & skor (${totalQuestions} soal) berhasil disimpan ke Firebase!`, "success");
+                showToast(`Kunci jawaban (${totalQuestions} soal) berhasil disimpan ke Firebase!`, "success");
             } catch (error) {
                 console.error("Save key error:", error);
                 showToast("Tersimpan lokal, namun gagal sinkron ke Firestore (cek Rules Firebase).", "error");
@@ -655,8 +626,8 @@
                 return showToast("Silakan isi Kelas siswa terlebih dahulu.", "error");
             }
 
-            const hasAnyKey = masterAnswerKey.slice(0, totalQuestions).some(k => k && k.trim() !== '');
-            if (!hasAnyKey) {
+            const validKeys = masterAnswerKey.slice(0, totalQuestions).filter(k => k && k.trim() !== '');
+            if (validKeys.length === 0) {
                 showToast("Master Kunci Jawaban masih kosong! Silakan atur di tab Pengaturan Kunci.", "error");
                 return switchTab('settings');
             }
@@ -671,26 +642,18 @@
             let benar = 0;
             let salah = 0;
             let kosong = 0;
-            let totalSkor = 0;
-            let maxSkor = 0;
             const analisis = [];
 
             for (let i = 0; i < totalQuestions; i++) {
                 const k = (masterAnswerKey[i] || '').toUpperCase();
                 const a = studentAnswers[i];
-                const bobot = parseFloat(masterQuestionScores[i]) || 0;
-                if (k !== '') maxSkor += bobot;
-
                 let isBenar = false;
-                let skorDiperoleh = 0;
 
                 if (a === '-') {
                     kosong++;
                 } else if (k !== '' && a === k) {
                     benar++;
                     isBenar = true;
-                    skorDiperoleh = bobot;
-                    totalSkor += bobot;
                 } else {
                     salah++;
                 }
@@ -699,15 +662,13 @@
                     no: i + 1,
                     kunci: k,
                     jawab: a,
-                    bobot: bobot,
-                    skor: Math.round(skorDiperoleh * 100) / 100,
                     isBenar: isBenar
                 });
             }
 
-            const nilaiPG = Math.round(totalSkor * 100) / 100;
-            const totalNilai = nilaiPG;
-            maxSkor = Math.round(maxSkor * 100) / 100;
+            // Perhitungan nilai otomatis skala 0 - 100
+            const denominator = validKeys.length > 0 ? validKeys.length : totalQuestions;
+            const totalNilai = Math.round((benar / denominator) * 100 * 100) / 100;
 
             const record = {
                 nama,
@@ -716,8 +677,7 @@
                 jawaban: studentAnswers,
                 analisis,
                 rekap: { benar, salah, kosong },
-                nilaiPG,
-                maxSkor,
+                nilaiPG: totalNilai,
                 totalNilai,
                 timestamp: Date.now()
             };
@@ -773,7 +733,6 @@
                 const s = res.rekap?.salah ?? 0;
                 const k = res.rekap?.kosong ?? 0;
                 const nilai = res.totalNilai ?? 0;
-                const max = res.maxSkor ? ` / ${res.maxSkor}` : '';
 
                 html += `
                     <tr class="hover:bg-gray-50 transition-colors">
@@ -787,7 +746,6 @@
                         </td>
                         <td class="px-4 sm:px-6 py-3.5 whitespace-nowrap text-center">
                             <span class="text-sm font-bold text-blue-700">${nilai}</span>
-                            <span class="text-xs text-gray-400">${max}</span>
                         </td>
                         <td class="px-4 sm:px-6 py-3.5 whitespace-nowrap text-right text-sm font-medium space-x-2">
                             <button type="button" onclick="viewDetail('${res.id}')" class="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded transition-colors">Detail</button>
@@ -837,7 +795,7 @@
                         <div class="text-xl font-bold text-blue-800">${res.totalNilai ?? 0}</div>
                     </div>
                 </div>
-                <p class="text-xs text-gray-500 mb-3">Arahkan kursor atau ketuk kotak nomor untuk melihat kunci jawaban & poin.</p>
+                <p class="text-xs text-gray-500 mb-3">Arahkan kursor atau ketuk kotak nomor untuk melihat perbandingan jawaban siswa dengan kunci.</p>
                 <div class="grid grid-cols-5 sm:grid-cols-8 gap-2">
             `;
 
@@ -846,9 +804,8 @@
                     ? 'bg-green-100 border-green-300 text-green-800'
                     : 'bg-red-100 border-red-300 text-red-800';
                 const ans = item.jawab === '-' ? 'Ø' : item.jawab;
-                const poinInfo = item.bobot !== undefined ? ` | Poin: ${item.skor ?? 0}/${item.bobot}` : '';
                 html += `
-                    <div class="border rounded text-center p-1.5 ${bgClass} relative group cursor-help" title="Kunci: ${item.kunci || 'Kosong'}${poinInfo}">
+                    <div class="border rounded text-center p-1.5 ${bgClass} relative group cursor-help" title="Kunci: ${item.kunci || 'Kosong'}">
                         <div class="text-[10px] text-gray-500">${item.no}</div>
                         <div class="font-bold text-sm">${ans}</div>
                         <div class="text-[9px] opacity-75">K:${item.kunci || '-'}</div>
@@ -899,18 +856,9 @@
 
             const keyRow = ['-', 'KUNCI JAWABAN', '-'];
             for (let i = 0; i < maxSoal; i++) keyRow.push(masterAnswerKey[i] || '-');
-            keyRow.push('-', '-', '-', '-');
+            keyRow.push('-', '-', '-', 100);
 
-            const scoreRow = ['-', 'BOBOT POIN', '-'];
-            let maxTotalScore = 0;
-            for (let i = 0; i < maxSoal; i++) {
-                const s = parseFloat(masterQuestionScores[i]) || 0;
-                scoreRow.push(s);
-                maxTotalScore += s;
-            }
-            scoreRow.push('-', '-', '-', Math.round(maxTotalScore * 100) / 100);
-
-            const rowsJawaban = [headers, keyRow, scoreRow];
+            const rowsJawaban = [headers, keyRow];
             sorted.forEach((res, idx) => {
                 const row = [idx + 1, res.nama || '-', res.kelas || '-'];
                 for (let i = 0; i < maxSoal; i++) {
@@ -1163,7 +1111,6 @@
             const detectedAnswers = new Array(totalQuestions).fill('');
             let filledCount = 0;
 
-            // Pisahkan token: baik huruf tunggal ('A') maupun deretan huruf kotak bersebelahan ('ABCDE')
             const rawTokens = normalized.split(/\s+/).filter(Boolean);
             const letterStream = [];
 
@@ -1171,7 +1118,6 @@
                 if (/^[ABCDE]$/.test(tok)) {
                     letterStream.push(tok);
                 } else if (/^[ABCDE]{2,10}$/.test(tok)) {
-                    // Jika garis pemisah antar kotak tipis sehingga 2-5 huruf terbaca menyambung
                     for (const ch of tok) {
                         letterStream.push(ch);
                     }
@@ -1207,7 +1153,7 @@
             let answersImgUrl = null;
 
             if (window._ljkGuideMode === 'dual') {
-                // Zona 1: Baris NAMA & KELAS (sedikit dilebarkan vertikal agar tidak terpotong)
+                // Zona 1: Baris NAMA & KELAS
                 identityImgUrl = cropAndEnhanceRegion(videoEl, canvasEl, 0.03, 0.03, 0.94, 0.21);
                 // Zona 2: Tabel Jawaban Pilihan Ganda 1-40 (melewati baris Pelajaran & Judul A-E di tengah)
                 answersImgUrl = cropAndEnhanceRegion(videoEl, canvasEl, 0.03, 0.42, 0.94, 0.55);
@@ -1277,8 +1223,6 @@
                 auth = getAuth(app);
                 db = getFirestore(app);
 
-                // Coba autentikasi; jika Anonymous Auth belum diaktifkan di Console,
-                // tetap lanjutkan koneksi ke Firestore menggunakan ID default.
                 try {
                     if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                         await signInWithCustomToken(auth, __initial_auth_token);
@@ -1291,7 +1235,7 @@
 
                 userId = auth?.currentUser?.uid || 'guru-default';
 
-                // Uji baca Master Kunci & Skor dari Firestore
+                // Uji baca Master Kunci dari Firestore
                 const keyRef = doc(db, 'artifacts', appId, 'users', userId, 'settings', 'answerKey');
                 const keySnap = await getDoc(keyRef);
 
@@ -1304,7 +1248,6 @@
                     const data = keySnap.data();
                     if (data.total) totalQuestions = data.total;
                     if (Array.isArray(data.key)) masterAnswerKey = data.key;
-                    if (Array.isArray(data.scores)) masterQuestionScores = data.scores;
                     setupUI();
                     renderAnswerKeyGrid();
                 }
