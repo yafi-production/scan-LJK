@@ -95,7 +95,7 @@
                         <div class="ml-3">
                             <h3 class="text-sm font-medium text-blue-800">Petunjuk Penggunaan</h3>
                             <div class="mt-1 text-xs sm:text-sm text-blue-700">
-                                <p>Pastikan <strong>Pengaturan Kunci Jawaban</strong> sudah diisi sebelum memproses LJK. Tekan <em>Buka Kamera Scan</em>, lalu paskan baris <strong>NAMA & KELAS</strong> pada kotak garis atas dan <strong>Tabel Jawaban PG</strong> pada kotak garis bawah.</p>
+                                <p>Pastikan <strong>Pengaturan Kunci Jawaban</strong> sudah diisi sebelum memproses LJK. Tekan <em>Buka Kamera Scan</em>, dekatkan kamera hingga tabel <strong>20 kolom (1–20 & 21–40)</strong> memenuhi lebar bingkai, atau gunakan <strong>Mode Dekat 2 Tahap</strong> untuk memotret Nama/Kelas dan Jawaban secara terpisah dari jarak sangat dekat.</p>
                             </div>
                         </div>
                     </div>
@@ -259,46 +259,62 @@
             <div class="px-4 sm:px-5 py-3 border-b flex items-center justify-between bg-gray-50">
                 <div class="flex items-center gap-2">
                     <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span>
-                    <h3 class="text-sm sm:text-base font-bold text-gray-900">Pemindai Kamera LJK</h3>
+                    <h3 class="text-sm sm:text-base font-bold text-gray-900">Pemindai Kamera LJK ASAS</h3>
                 </div>
                 <button type="button" onclick="closeCameraModal()" class="text-gray-500 hover:text-gray-700 p-1 rounded-lg">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
 
-            <!-- Live Camera Viewfinder + Guide Overlay -->
-            <div class="relative bg-black flex items-center justify-center overflow-hidden min-h-[260px] sm:min-h-[360px] flex-1">
-                <video id="camera-video" autoplay playsinline muted class="w-full h-full max-h-[60dvh] object-contain"></video>
+            <!-- Live Camera Viewfinder (Rasio Lebar 16:9 agar tabel 20 kolom bisa difoto dari jarak dekat) -->
+            <div id="camera-viewport" class="relative bg-black flex items-center justify-center overflow-hidden w-full aspect-[16/10] sm:aspect-[16/9] max-h-[52dvh]">
+                <video id="camera-video" autoplay playsinline muted class="w-full h-full object-cover transition-transform duration-150"></video>
 
-                <!-- 2-Zone Guide Overlay (Khusus LJK ASAS) -->
-                <div id="guide-dual-zone" class="absolute inset-0 pointer-events-none flex flex-col justify-between p-3 sm:p-4">
-                    <div class="h-[23%] border-2 border-dashed border-amber-400 bg-amber-400/10 rounded-lg flex items-center justify-center px-2">
-                        <span class="bg-amber-500/90 text-slate-950 text-[10px] sm:text-xs font-bold px-2.5 py-0.5 rounded shadow">
-                            1. Paskan Baris NAMA & KELAS di Sini
+                <!-- Mode 1: 2-Zone Wide Overlay (1x Potret LJK ASAS dari jarak dekat) -->
+                <div id="guide-dual-zone" class="absolute inset-0 pointer-events-none flex flex-col justify-between p-2 sm:p-3">
+                    <div class="h-[22%] border-2 border-dashed border-amber-400 bg-amber-400/10 rounded-lg flex items-center justify-center px-2">
+                        <span class="bg-amber-500/95 text-slate-950 text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded shadow">
+                            1. Baris NAMA : ... | KELAS : ...
                         </span>
                     </div>
 
                     <div class="text-center px-2">
-                        <span class="bg-black/60 text-white/90 text-[10px] px-2.5 py-0.5 rounded-full">
-                            Area tengah (Pelajaran & Judul) dilewati otomatis
+                        <span class="bg-black/65 text-white/95 text-[9px] sm:text-[10px] px-2 py-0.5 rounded-full">
+                            Pelajaran, No. Peserta & Judul dilewati otomatis
                         </span>
                     </div>
 
-                    <div class="h-[55%] border-2 border-dashed border-emerald-400 bg-emerald-400/10 rounded-lg flex items-end justify-center pb-2 px-2">
-                        <span class="bg-emerald-600/90 text-white text-[10px] sm:text-xs font-bold px-2.5 py-0.5 rounded shadow">
-                            2. Paskan Tabel Jawaban Pilihan Ganda di Sini
+                    <div class="h-[48%] border-2 border-dashed border-emerald-400 bg-emerald-400/10 rounded-lg flex items-end justify-center pb-1.5 px-2">
+                        <span class="bg-emerald-600/95 text-white text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded shadow">
+                            2. Tabel Jawaban PG (Kolom 1–20 & 21–40)
                         </span>
                     </div>
                 </div>
 
-                <!-- 1-Zone Full Guide Overlay -->
-                <div id="guide-single-zone" class="hidden absolute inset-0 pointer-events-none items-center justify-center p-4">
-                    <div class="w-[92%] h-[92%] border-2 border-dashed border-blue-400 bg-blue-400/10 rounded-xl flex items-end justify-center pb-2">
+                <!-- Mode 2: Close-Up 2-Step Overlay (Foto super dekat per bagian) -->
+                <div id="guide-step-zone" class="hidden absolute inset-0 pointer-events-none items-center justify-center p-2.5 sm:p-4">
+                    <div id="guide-step-box" class="w-[96%] h-[68%] border-2 border-dashed border-amber-400 bg-amber-400/10 rounded-xl flex items-end justify-center pb-2 px-2">
+                        <span id="guide-step-label" class="bg-amber-500/95 text-slate-950 text-[10px] sm:text-xs font-bold px-2.5 py-0.5 rounded shadow">
+                            TAHAP 1/2: Paskan Baris NAMA & KELAS saja
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Mode 3: 1-Zone Full Guide Overlay -->
+                <div id="guide-single-zone" class="hidden absolute inset-0 pointer-events-none items-center justify-center p-2.5 sm:p-3">
+                    <div class="w-[95%] h-[90%] border-2 border-dashed border-blue-400 bg-blue-400/10 rounded-xl flex items-end justify-center pb-2">
                         <span class="bg-blue-600/90 text-white text-[10px] sm:text-xs font-bold px-2.5 py-0.5 rounded shadow">
-                            Paskan Seluruh Area LJK di Dalam Kotak
+                            Paskan Area LJK di Dalam Kotak
                         </span>
                     </div>
                 </div>
+            </div>
+
+            <!-- Zoom Control Bar (Memudahkan foto tanpa harus mendekatkan/menjauhkan HP berlebihan) -->
+            <div class="px-4 py-2 bg-slate-900 text-white flex items-center gap-3 text-xs">
+                <span class="font-medium text-slate-300 whitespace-nowrap">Zoom:</span>
+                <input type="range" id="camera-zoom-slider" min="1" max="2.5" step="0.1" value="1" oninput="setCameraZoom(this.value)" class="flex-1 accent-blue-500 cursor-pointer h-1.5 bg-slate-700 rounded-lg">
+                <span id="camera-zoom-label" class="font-bold text-blue-400 w-9 text-right">1.0x</span>
             </div>
 
             <!-- Hidden Canvas & Native Camera Fallback -->
@@ -306,26 +322,26 @@
             <input type="file" id="camera-file-fallback" accept="image/*" capture="environment" class="hidden" onchange="handleFallbackImageScan(this)">
 
             <!-- Camera Controls -->
-            <div class="px-4 sm:px-5 py-3.5 bg-gray-50 border-t flex flex-wrap items-center justify-between gap-2.5">
-                <div class="flex flex-wrap items-center gap-2">
-                    <button type="button" onclick="switchCamera()" class="bg-white hover:bg-gray-100 text-gray-700 border border-gray-300 px-3 py-2 rounded-xl text-xs sm:text-sm font-medium transition-colors flex items-center">
-                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+            <div class="px-4 sm:px-5 py-3 bg-gray-50 border-t flex flex-wrap items-center justify-between gap-2">
+                <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                    <button type="button" onclick="switchCamera()" class="bg-white hover:bg-gray-100 text-gray-700 border border-gray-300 px-2.5 sm:px-3 py-2 rounded-xl text-xs font-medium transition-colors flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                         Putar
                     </button>
-                    <button type="button" id="btn-toggle-guide" onclick="toggleScanGuideMode()" class="bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 px-3 py-2 rounded-xl text-xs sm:text-sm font-medium transition-colors">
-                        Bingkai: 2 Zona
+                    <button type="button" id="btn-toggle-guide" onclick="toggleScanGuideMode()" class="bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 px-2.5 sm:px-3 py-2 rounded-xl text-xs font-semibold transition-colors">
+                        Mode: 1x Potret
                     </button>
-                    <button type="button" onclick="triggerNativeCamera()" class="bg-slate-200 hover:bg-slate-300 text-slate-800 px-3 py-2 rounded-xl text-xs sm:text-sm font-medium transition-colors" title="Gunakan aplikasi kamera bawaan HP">
+                    <button type="button" onclick="triggerNativeCamera()" class="bg-slate-200 hover:bg-slate-300 text-slate-800 px-2.5 sm:px-3 py-2 rounded-xl text-xs font-medium transition-colors" title="Gunakan aplikasi kamera bawaan HP">
                         Kamera HP
                     </button>
                 </div>
                 <div class="flex items-center gap-2 ml-auto">
-                    <button type="button" onclick="closeCameraModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium transition-colors">
+                    <button type="button" onclick="closeCameraModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-2 rounded-xl text-xs font-medium transition-colors">
                         Batal
                     </button>
-                    <button type="button" onclick="captureAndScan()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-semibold shadow-md transition-colors flex items-center">
-                        <svg class="w-5 h-5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                        Potret & Scan
+                    <button type="button" id="btn-capture-scan" onclick="captureAndScan()" class="bg-blue-600 hover:bg-blue-700 text-white px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold shadow-md transition-colors flex items-center">
+                        <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        <span id="btn-capture-label">Potret & Scan</span>
                     </button>
                 </div>
             </div>
@@ -337,25 +353,28 @@
         window._ljkTotalQuestions = 40;
         window._ljkCameraStream = null;
         window._ljkFacingMode = 'environment';
-        window._ljkGuideMode = 'dual';
+        window._ljkGuideMode = 'dual'; // 'dual' | 'step1' | 'step2' | 'single'
+        window._ljkZoomLevel = 1.0;
+        window._ljkHardwareZoomSupported = false;
+        window._ljkStep1IdentityImg = null;
 
         let _toastTimer = null;
         window.showToast = function (message, type = 'info') {
             const toast = document.getElementById('toast');
-            const msgEl = document.getElementById('toast-message');
             const iconEl = document.getElementById('toast-icon');
-            if (!toast || !msgEl || !iconEl) return;
+            const msgEl = document.getElementById('toast-message');
+            if (!toast || !msgEl) return;
 
-            toast.classList.remove('border-blue-600', 'border-green-600', 'border-red-600', 'border-amber-500');
+            toast.classList.remove('border-blue-600', 'border-green-600', 'border-red-600');
             if (type === 'success') {
                 toast.classList.add('border-green-600');
-                iconEl.innerHTML = `<svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
+                if (iconEl) iconEl.innerHTML = `<svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
             } else if (type === 'error') {
                 toast.classList.add('border-red-600');
-                iconEl.innerHTML = `<svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+                if (iconEl) iconEl.innerHTML = `<svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
             } else {
                 toast.classList.add('border-blue-600');
-                iconEl.innerHTML = `<svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+                if (iconEl) iconEl.innerHTML = `<svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
             }
 
             msgEl.textContent = message;
@@ -427,6 +446,14 @@
             }
 
             window._ljkCameraStream = stream;
+            window._ljkHardwareZoomSupported = false;
+            window._ljkZoomLevel = 1.0;
+            const zoomSlider = document.getElementById('camera-zoom-slider');
+            const zoomLabel = document.getElementById('camera-zoom-label');
+            if (zoomSlider) zoomSlider.value = '1';
+            if (zoomLabel) zoomLabel.textContent = '1.0x';
+            videoEl.style.transform = 'scale(1)';
+
             videoEl.srcObject = stream;
             try {
                 await videoEl.play();
@@ -440,17 +467,113 @@
                     const capabilities = videoTrack.getCapabilities();
                     if (capabilities && capabilities.zoom) {
                         const minZoom = capabilities.zoom.min !== undefined ? capabilities.zoom.min : 1;
+                        window._ljkHardwareZoomSupported = true;
                         await videoTrack.applyConstraints({
                             advanced: [{ zoom: minZoom }]
-                        }).catch(() => {});
+                        }).catch(() => {
+                            window._ljkHardwareZoomSupported = false;
+                        });
                     }
                 }
             } catch (zoomErr) {
-                // Abaikan jika kontrol zoom tidak didukung perangkat
+                window._ljkHardwareZoomSupported = false;
+            }
+        }
+
+        window.setCameraZoom = async function (val) {
+            const zoomVal = Math.max(1, Math.min(2.5, parseFloat(val) || 1));
+            window._ljkZoomLevel = zoomVal;
+
+            const zoomLabel = document.getElementById('camera-zoom-label');
+            if (zoomLabel) zoomLabel.textContent = zoomVal.toFixed(1) + 'x';
+
+            const videoEl = document.getElementById('camera-video');
+            if (window._ljkHardwareZoomSupported && window._ljkCameraStream) {
+                try {
+                    const track = window._ljkCameraStream.getVideoTracks()[0];
+                    if (track) {
+                        await track.applyConstraints({ advanced: [{ zoom: zoomVal }] });
+                        if (videoEl) videoEl.style.transform = 'scale(1)';
+                        return;
+                    }
+                } catch (e) {
+                    window._ljkHardwareZoomSupported = false;
+                }
+            }
+
+            // Fallback zoom digital halus pada tampilan dan pemotongan canvas
+            if (videoEl) {
+                videoEl.style.transform = `scale(${zoomVal})`;
+            }
+        };
+
+        function updateGuideUI() {
+            const dualEl = document.getElementById('guide-dual-zone');
+            const stepEl = document.getElementById('guide-step-zone');
+            const stepBox = document.getElementById('guide-step-box');
+            const stepLabel = document.getElementById('guide-step-label');
+            const singleEl = document.getElementById('guide-single-zone');
+            const btnMode = document.getElementById('btn-toggle-guide');
+            const btnCapLabel = document.getElementById('btn-capture-label');
+
+            if (dualEl) dualEl.classList.add('hidden');
+            if (stepEl) {
+                stepEl.classList.add('hidden');
+                stepEl.classList.remove('flex');
+            }
+            if (singleEl) {
+                singleEl.classList.add('hidden');
+                singleEl.classList.remove('flex');
+            }
+
+            if (window._ljkGuideMode === 'dual') {
+                if (dualEl) dualEl.classList.remove('hidden');
+                if (btnMode) btnMode.textContent = 'Mode: 1x Potret';
+                if (btnCapLabel) btnCapLabel.textContent = 'Potret & Scan';
+            } else if (window._ljkGuideMode === 'step1') {
+                if (stepEl) {
+                    stepEl.classList.remove('hidden');
+                    stepEl.classList.add('flex');
+                }
+                if (stepBox) {
+                    stepBox.className = 'w-[96%] h-[46%] border-2 border-dashed border-amber-400 bg-amber-400/10 rounded-xl flex items-end justify-center pb-2 px-2';
+                }
+                if (stepLabel) {
+                    stepLabel.className = 'bg-amber-500/95 text-slate-950 text-[10px] sm:text-xs font-bold px-2.5 py-0.5 rounded shadow';
+                    stepLabel.textContent = 'TAHAP 1/2: Paskan Baris NAMA & KELAS saja';
+                }
+                if (btnMode) btnMode.textContent = 'Mode: Dekat 2 Tahap';
+                if (btnCapLabel) btnCapLabel.textContent = '1. Foto Nama & Kelas';
+            } else if (window._ljkGuideMode === 'step2') {
+                if (stepEl) {
+                    stepEl.classList.remove('hidden');
+                    stepEl.classList.add('flex');
+                }
+                if (stepBox) {
+                    stepBox.className = 'w-[96%] h-[78%] border-2 border-dashed border-emerald-400 bg-emerald-400/10 rounded-xl flex items-end justify-center pb-2 px-2';
+                }
+                if (stepLabel) {
+                    stepLabel.className = 'bg-emerald-600/95 text-white text-[10px] sm:text-xs font-bold px-2.5 py-0.5 rounded shadow';
+                    stepLabel.textContent = 'TAHAP 2/2: Paskan Tabel Jawaban 1–20 & 21–40';
+                }
+                if (btnMode) btnMode.textContent = 'Mode: Dekat 2 Tahap';
+                if (btnCapLabel) btnCapLabel.textContent = '2. Foto Jawaban & Scan';
+            } else {
+                if (singleEl) {
+                    singleEl.classList.remove('hidden');
+                    singleEl.classList.add('flex');
+                }
+                if (btnMode) btnMode.textContent = 'Mode: 1 Kotak';
+                if (btnCapLabel) btnCapLabel.textContent = 'Potret & Scan';
             }
         }
 
         window.openCameraModal = async function () {
+            window._ljkStep1IdentityImg = null;
+            if (window._ljkGuideMode === 'step2') {
+                window._ljkGuideMode = 'step1';
+            }
+            updateGuideUI();
             const modal = document.getElementById('camera-modal');
             if (modal) modal.classList.remove('hidden');
             await startWideCamera();
@@ -458,6 +581,10 @@
 
         window.closeCameraModal = function () {
             stopActiveCameraStream();
+            window._ljkStep1IdentityImg = null;
+            if (window._ljkGuideMode === 'step2') {
+                window._ljkGuideMode = 'step1';
+            }
             const modal = document.getElementById('camera-modal');
             if (modal) modal.classList.add('hidden');
         };
@@ -480,45 +607,76 @@
         };
 
         window.toggleScanGuideMode = function () {
-            window._ljkGuideMode = window._ljkGuideMode === 'dual' ? 'single' : 'dual';
-            const dualEl = document.getElementById('guide-dual-zone');
-            const singleEl = document.getElementById('guide-single-zone');
-            const btn = document.getElementById('btn-toggle-guide');
-
+            window._ljkStep1IdentityImg = null;
             if (window._ljkGuideMode === 'dual') {
-                if (dualEl) dualEl.classList.remove('hidden');
-                if (singleEl) {
-                    singleEl.classList.add('hidden');
-                    singleEl.classList.remove('flex');
-                }
-                if (btn) btn.textContent = 'Bingkai: 2 Zona';
+                window._ljkGuideMode = 'step1';
+                window.showToast("Mode Dekat 2 Tahap: Foto Nama & Kelas dulu, lalu foto Tabel PG.", "info");
+            } else if (window._ljkGuideMode === 'step1' || window._ljkGuideMode === 'step2') {
+                window._ljkGuideMode = 'single';
             } else {
-                if (dualEl) dualEl.classList.add('hidden');
-                if (singleEl) {
-                    singleEl.classList.remove('hidden');
-                    singleEl.classList.add('flex');
-                }
-                if (btn) btn.textContent = 'Bingkai: 1 Zona';
+                window._ljkGuideMode = 'dual';
             }
+            updateGuideUI();
         };
 
-        function cropAndEnhanceSource(sourceEl, srcW, srcH, canvasEl, rx, ry, rw, rh) {
-            const sx = Math.max(0, Math.round(srcW * rx));
-            const sy = Math.max(0, Math.round(srcH * ry));
-            const sw = Math.min(srcW - sx, Math.round(srcW * rw));
-            const sh = Math.min(srcH - sy, Math.round(srcH * rh));
+        function getVisibleVideoCropRect(videoEl) {
+            const vw = videoEl.videoWidth;
+            const vh = videoEl.videoHeight;
+            const cw = videoEl.clientWidth || vw;
+            const ch = videoEl.clientHeight || vh;
 
-            canvasEl.width = sw;
-            canvasEl.height = sh;
+            const videoRatio = vw / vh;
+            const containerRatio = cw / ch;
+
+            let visW = vw;
+            let visH = vh;
+            let visX = 0;
+            let visY = 0;
+
+            // Sesuaikan dengan object-cover agar hasil crop sama persis dengan yang terlihat di bingkai
+            if (videoRatio > containerRatio) {
+                visW = vh * containerRatio;
+                visX = (vw - visW) / 2;
+            } else {
+                visH = vw / containerRatio;
+                visY = (vh - visH) / 2;
+            }
+
+            // Terapkan digital zoom jika hardware zoom tidak aktif
+            const digitalZoom = window._ljkHardwareZoomSupported ? 1 : (window._ljkZoomLevel || 1);
+            if (digitalZoom > 1) {
+                const zw = visW / digitalZoom;
+                const zh = visH / digitalZoom;
+                visX += (visW - zw) / 2;
+                visY += (visH - zh) / 2;
+                visW = zw;
+                visH = zh;
+            }
+
+            return { visX, visY, visW, visH };
+        }
+
+        function cropAndEnhanceSource(sourceEl, baseRect, canvasEl, rx, ry, rw, rh) {
+            const sx = Math.max(0, Math.round(baseRect.visX + baseRect.visW * rx));
+            const sy = Math.max(0, Math.round(baseRect.visY + baseRect.visH * ry));
+            const sw = Math.max(10, Math.round(baseRect.visW * rw));
+            const sh = Math.max(10, Math.round(baseRect.visH * rh));
+
+            // Perbesar 2x agar huruf kecil di dalam 20 kolom tetap tajam dibaca OCR
+            const scale = sw < 900 ? 2 : 1;
+            canvasEl.width = sw * scale;
+            canvasEl.height = sh * scale;
             const ctx = canvasEl.getContext('2d');
-            ctx.drawImage(sourceEl, sx, sy, sw, sh, 0, 0, sw, sh);
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            ctx.drawImage(sourceEl, sx, sy, sw, sh, 0, 0, canvasEl.width, canvasEl.height);
 
             try {
-                const imgData = ctx.getImageData(0, 0, sw, sh);
+                const imgData = ctx.getImageData(0, 0, canvasEl.width, canvasEl.height);
                 const data = imgData.data;
                 for (let i = 0; i < data.length; i += 4) {
                     const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
-                    const enhanced = Math.min(255, Math.max(0, (gray - 128) * 1.5 + 128));
+                    const enhanced = Math.min(255, Math.max(0, (gray - 125) * 1.65 + 128));
                     data[i] = enhanced;
                     data[i + 1] = enhanced;
                     data[i + 2] = enhanced;
@@ -674,14 +832,30 @@
                 return window.showToast("Kamera langsung belum aktif. Ketuk tombol 'Kamera HP' atau izinkan kamera.", "error");
             }
 
+            const baseRect = getVisibleVideoCropRect(videoEl);
+
+            if (window._ljkGuideMode === 'step1') {
+                window._ljkStep1IdentityImg = cropAndEnhanceSource(videoEl, baseRect, canvasEl, 0.02, 0.27, 0.96, 0.46);
+                window._ljkGuideMode = 'step2';
+                updateGuideUI();
+                return window.showToast("Tahap 1 tersimpan! Sekarang arahkan ke Tabel Jawaban 1–40 lalu tekan tombol biru.", "success");
+            }
+
+            if (window._ljkGuideMode === 'step2') {
+                const identityImgUrl = window._ljkStep1IdentityImg;
+                const answersImgUrl = cropAndEnhanceSource(videoEl, baseRect, canvasEl, 0.02, 0.11, 0.96, 0.78);
+                window.closeCameraModal();
+                return await runOcrImages(identityImgUrl, answersImgUrl);
+            }
+
             let identityImgUrl = null;
             let answersImgUrl = null;
 
             if (window._ljkGuideMode === 'dual') {
-                identityImgUrl = cropAndEnhanceSource(videoEl, videoEl.videoWidth, videoEl.videoHeight, canvasEl, 0.03, 0.03, 0.94, 0.23);
-                answersImgUrl = cropAndEnhanceSource(videoEl, videoEl.videoWidth, videoEl.videoHeight, canvasEl, 0.03, 0.42, 0.94, 0.55);
+                identityImgUrl = cropAndEnhanceSource(videoEl, baseRect, canvasEl, 0.02, 0.02, 0.96, 0.23);
+                answersImgUrl = cropAndEnhanceSource(videoEl, baseRect, canvasEl, 0.02, 0.48, 0.96, 0.50);
             } else {
-                answersImgUrl = cropAndEnhanceSource(videoEl, videoEl.videoWidth, videoEl.videoHeight, canvasEl, 0.04, 0.04, 0.92, 0.92);
+                answersImgUrl = cropAndEnhanceSource(videoEl, baseRect, canvasEl, 0.03, 0.05, 0.94, 0.90);
             }
 
             window.closeCameraModal();
@@ -699,7 +873,8 @@
             reader.onload = function (ev) {
                 const img = new Image();
                 img.onload = async function () {
-                    const fullImgUrl = cropAndEnhanceSource(img, img.width, img.height, canvasEl, 0, 0, 1, 1);
+                    const fullRect = { visX: 0, visY: 0, visW: img.width, visH: img.height };
+                    const fullImgUrl = cropAndEnhanceSource(img, fullRect, canvasEl, 0, 0, 1, 1);
                     window.closeCameraModal();
                     await runOcrImages(null, fullImgUrl);
                 };
