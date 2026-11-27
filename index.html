@@ -122,10 +122,14 @@
                     <div class="bg-white shadow rounded-xl p-5 sm:p-6 lg:col-span-2">
                         <div class="flex flex-wrap justify-between items-center gap-2 mb-4 border-b pb-2">
                             <h2 class="text-lg font-semibold">Lembar Jawaban PG</h2>
-                            <div class="flex gap-2">
+                            <div class="flex flex-wrap gap-2">
                                 <button type="button" onclick="openCameraModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-1.5 rounded-md text-sm font-medium transition-colors shadow-sm flex items-center">
                                     <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                                     Buka Kamera Scan
+                                </button>
+                                <button type="button" onclick="triggerGalleryUpload()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center">
+                                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                    Pilih Foto
                                 </button>
                                 <button type="button" onclick="clearStudentAnswers()" class="text-red-600 hover:bg-red-50 px-3 py-1.5 rounded-md text-sm font-medium transition-colors border border-red-200">
                                     Reset
@@ -137,6 +141,24 @@
                         <div id="ocr-progress" class="hidden mb-4 p-3 bg-indigo-50 text-indigo-700 rounded-lg text-sm flex items-center">
                             <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-indigo-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                             <span id="ocr-status-text">Memindai gambar LJK...</span>
+                        </div>
+
+                        <!-- Last Scan Cropped Preview (Helps verify framing & grid line removal) -->
+                        <div id="ocr-preview-box" class="hidden mb-4 p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-semibold text-slate-700">Pratinjau Hasil Potongan Scan (Garis Tabel Dibersihkan)</span>
+                                <button type="button" onclick="document.getElementById('ocr-preview-box').classList.add('hidden')" class="text-xs text-slate-500 hover:text-slate-700">Tutup</button>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <div id="preview-id-wrap" class="hidden bg-white border border-slate-200 rounded p-1.5">
+                                    <div class="text-[10px] font-medium text-slate-500 mb-1">Area Identitas (Nama | Kelas)</div>
+                                    <img id="preview-id-img" alt="Crop Identitas" class="w-full h-12 object-contain bg-white">
+                                </div>
+                                <div id="preview-ans-wrap" class="bg-white border border-slate-200 rounded p-1.5 sm:col-span-2">
+                                    <div class="text-[10px] font-medium text-slate-500 mb-1">Area Jawaban PG (Baris 1–20 & 21–40)</div>
+                                    <img id="preview-ans-img" alt="Crop Jawaban" class="w-full max-h-24 object-contain bg-white">
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Manual Grid -->
@@ -272,22 +294,37 @@
 
                 <!-- Mode 1: 2-Zone Wide Overlay (1x Potret LJK ASAS dari jarak dekat) -->
                 <div id="guide-dual-zone" class="absolute inset-0 pointer-events-none flex flex-col justify-between p-2 sm:p-3">
-                    <div class="h-[22%] border-2 border-dashed border-amber-400 bg-amber-400/10 rounded-lg flex items-center justify-center px-2">
-                        <span class="bg-amber-500/95 text-slate-950 text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded shadow">
-                            1. Baris NAMA : ... | KELAS : ...
-                        </span>
+                    <div class="h-[22%] border-2 border-dashed border-amber-400 bg-amber-400/10 rounded-lg flex items-center justify-between px-2 relative">
+                        <div class="w-1/2 text-center border-r border-dashed border-amber-300/80 pr-1">
+                            <span class="bg-amber-500/95 text-slate-950 text-[9px] sm:text-xs font-bold px-1.5 py-0.5 rounded shadow">
+                                1A. NAMA : ...
+                            </span>
+                        </div>
+                        <div class="w-1/2 text-center pl-1">
+                            <span class="bg-amber-500/95 text-slate-950 text-[9px] sm:text-xs font-bold px-1.5 py-0.5 rounded shadow">
+                                1B. KELAS : ...
+                            </span>
+                        </div>
                     </div>
 
                     <div class="text-center px-2">
                         <span class="bg-black/65 text-white/95 text-[9px] sm:text-[10px] px-2 py-0.5 rounded-full">
-                            Pelajaran, No. Peserta & Judul dilewati otomatis
+                            Mata Pelajaran, No. Peserta & Judul PG di area tengah ini
                         </span>
                     </div>
 
-                    <div class="h-[48%] border-2 border-dashed border-emerald-400 bg-emerald-400/10 rounded-lg flex items-end justify-center pb-1.5 px-2">
-                        <span class="bg-emerald-600/95 text-white text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded shadow">
-                            2. Tabel Jawaban PG (Kolom 1–20 & 21–40)
-                        </span>
+                    <div class="h-[48%] border-2 border-dashed border-emerald-400 bg-emerald-400/10 rounded-lg flex flex-col justify-between py-1 px-2 relative">
+                        <div class="text-center">
+                            <span class="bg-emerald-600/90 text-white text-[9px] sm:text-[11px] font-bold px-2 py-0.5 rounded shadow">
+                                Baris Atas: No. 1 – 20
+                            </span>
+                        </div>
+                        <div class="border-t border-dashed border-emerald-300/70 w-full"></div>
+                        <div class="text-center">
+                            <span class="bg-emerald-600/90 text-white text-[9px] sm:text-[11px] font-bold px-2 py-0.5 rounded shadow">
+                                Baris Bawah: No. 21 – 40
+                            </span>
+                        </div>
                     </div>
                 </div>
 
@@ -317,25 +354,10 @@
                 <span id="camera-zoom-label" class="font-bold text-blue-400 w-9 text-right">1.0x</span>
             </div>
 
-            <!-- Hidden Canvas & Native Camera Fallback -->
+            <!-- Hidden Canvas & Image File Inputs -->
             <canvas id="camera-canvas" class="hidden"></canvas>
             <input type="file" id="camera-file-fallback" accept="image/*" capture="environment" class="hidden" onchange="handleFallbackImageScan(this)">
-
-            <!-- Camera Controls -->
-            <div class="px-4 sm:px-5 py-3 bg-gray-50 border-t flex flex-wrap items-center justify-between gap-2">
-                <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                    <button type="button" onclick="switchCamera()" class="bg-white hover:bg-gray-100 text-gray-700 border border-gray-300 px-2.5 sm:px-3 py-2 rounded-xl text-xs font-medium transition-colors flex items-center">
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                        Putar
-                    </button>
-                    <button type="button" id="btn-toggle-guide" onclick="toggleScanGuideMode()" class="bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 px-2.5 sm:px-3 py-2 rounded-xl text-xs font-semibold transition-colors">
-                        Mode: 1x Potret
-                    </button>
-                    <button type="button" onclick="triggerNativeCamera()" class="bg-slate-200 hover:bg-slate-300 text-slate-800 px-2.5 sm:px-3 py-2 rounded-xl text-xs font-medium transition-colors" title="Gunakan aplikasi kamera bawaan HP">
-                        Kamera HP
-                    </button>
-                </div>
-                <div class="flex items-center gap-2 ml-auto">
+            <input type="file" id="gallery-file-input" accept="image/*" class="hidden" onchange="handleFallbackImageScan(this)">
                     <button type="button" onclick="closeCameraModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-2 rounded-xl text-xs font-medium transition-colors">
                         Batal
                     </button>
@@ -606,6 +628,14 @@
             }
         };
 
+        window.triggerGalleryUpload = function () {
+            const fileInput = document.getElementById('gallery-file-input');
+            if (fileInput) {
+                fileInput.value = '';
+                fileInput.click();
+            }
+        };
+
         window.toggleScanGuideMode = function () {
             window._ljkStep1IdentityImg = null;
             if (window._ljkGuideMode === 'dual') {
@@ -656,37 +686,167 @@
             return { visX, visY, visW, visH };
         }
 
-        function cropAndEnhanceSource(sourceEl, baseRect, canvasEl, rx, ry, rw, rh) {
+        // Binarisasi adaptif lokal agar bayangan kertas (seperti pada foto LJK) tidak menggelapkan tulisan
+        function adaptiveBinarize(ctx, w, h) {
+            const imgData = ctx.getImageData(0, 0, w, h);
+            const data = imgData.data;
+            const gray = new Uint8Array(w * h);
+            for (let i = 0, p = 0; i < data.length; i += 4, p++) {
+                gray[p] = (0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]) | 0;
+            }
+
+            const integral = new Uint32Array((w + 1) * (h + 1));
+            for (let y = 0; y < h; y++) {
+                let rowSum = 0;
+                for (let x = 0; x < w; x++) {
+                    rowSum += gray[y * w + x];
+                    integral[(y + 1) * (w + 1) + (x + 1)] = integral[y * (w + 1) + (x + 1)] + rowSum;
+                }
+            }
+
+            const radius = Math.max(12, Math.round(Math.min(w, h) * 0.04));
+            const binary = new Uint8Array(w * h);
+
+            for (let y = 0; y < h; y++) {
+                const y1 = Math.max(0, y - radius);
+                const y2 = Math.min(h - 1, y + radius);
+                for (let x = 0; x < w; x++) {
+                    const x1 = Math.max(0, x - radius);
+                    const x2 = Math.min(w - 1, x + radius);
+                    const count = (x2 - x1 + 1) * (y2 - y1 + 1);
+                    const sum = integral[(y2 + 1) * (w + 1) + (x2 + 1)]
+                              - integral[y1 * (w + 1) + (x2 + 1)]
+                              - integral[(y2 + 1) * (w + 1) + x1]
+                              + integral[y1 * (w + 1) + x1];
+                    const mean = sum / count;
+                    binary[y * w + x] = (gray[y * w + x] < mean - 13 && gray[y * w + x] < 215) ? 1 : 0;
+                }
+            }
+            return { binary, imgData };
+        }
+
+        // Hapus garis kotak tabel (horizontal & vertikal) agar tidak terbaca sebagai huruf 'I' atau '1'
+        function removeTableLines(binary, w, h) {
+            const toErase = new Uint8Array(w * h);
+
+            const minHorizLen = Math.round(w * 0.22);
+            for (let y = 0; y < h; y++) {
+                let run = 0;
+                for (let x = 0; x <= w; x++) {
+                    if (x < w && binary[y * w + x] === 1) {
+                        run++;
+                    } else {
+                        if (run >= minHorizLen) {
+                            for (let k = x - run; k < x; k++) {
+                                toErase[y * w + k] = 1;
+                                if (y > 0) toErase[(y - 1) * w + k] = 1;
+                                if (y + 1 < h) toErase[(y + 1) * w + k] = 1;
+                            }
+                        }
+                        run = 0;
+                    }
+                }
+            }
+
+            const minVertLen = Math.round(h * 0.36);
+            for (let x = 0; x < w; x++) {
+                let run = 0;
+                for (let y = 0; y <= h; y++) {
+                    if (y < h && binary[y * w + x] === 1) {
+                        run++;
+                    } else {
+                        if (run >= minVertLen) {
+                            for (let k = y - run; k < y; k++) {
+                                toErase[k * w + x] = 1;
+                                if (x > 0) toErase[k * w + (x - 1)] = 1;
+                                if (x + 1 < w) toErase[k * w + (x + 1)] = 1;
+                            }
+                        }
+                        run = 0;
+                    }
+                }
+            }
+
+            for (let i = 0; i < binary.length; i++) {
+                if (toErase[i]) binary[i] = 0;
+            }
+        }
+
+        function writeBinaryToCanvas(ctx, binary, imgData) {
+            const data = imgData.data;
+            for (let i = 0, p = 0; i < data.length; i += 4, p++) {
+                const v = binary[p] ? 0 : 255;
+                data[i] = v;
+                data[i + 1] = v;
+                data[i + 2] = v;
+                data[i + 3] = 255;
+            }
+            ctx.putImageData(imgData, 0, 0);
+        }
+
+        function cropAndEnhanceSource(sourceEl, baseRect, canvasEl, rx, ry, rw, rh, stripLines = true) {
             const sx = Math.max(0, Math.round(baseRect.visX + baseRect.visW * rx));
             const sy = Math.max(0, Math.round(baseRect.visY + baseRect.visH * ry));
             const sw = Math.max(10, Math.round(baseRect.visW * rw));
             const sh = Math.max(10, Math.round(baseRect.visH * rh));
 
-            // Perbesar 2x agar huruf kecil di dalam 20 kolom tetap tajam dibaca OCR
-            const scale = sw < 900 ? 2 : 1;
-            canvasEl.width = sw * scale;
-            canvasEl.height = sh * scale;
+            // Perbesar gambar beresolusi rendah agar huruf tulisan tangan tetap tajam
+            const scale = sw < 1000 ? 2 : 1;
+            const w = sw * scale;
+            const h = sh * scale;
+            canvasEl.width = w;
+            canvasEl.height = h;
+
             const ctx = canvasEl.getContext('2d');
             ctx.imageSmoothingEnabled = true;
             ctx.imageSmoothingQuality = 'high';
-            ctx.drawImage(sourceEl, sx, sy, sw, sh, 0, 0, canvasEl.width, canvasEl.height);
+            ctx.drawImage(sourceEl, sx, sy, sw, sh, 0, 0, w, h);
 
             try {
-                const imgData = ctx.getImageData(0, 0, canvasEl.width, canvasEl.height);
-                const data = imgData.data;
-                for (let i = 0; i < data.length; i += 4) {
-                    const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
-                    const enhanced = Math.min(255, Math.max(0, (gray - 125) * 1.65 + 128));
-                    data[i] = enhanced;
-                    data[i + 1] = enhanced;
-                    data[i + 2] = enhanced;
+                const { binary, imgData } = adaptiveBinarize(ctx, w, h);
+                if (stripLines) {
+                    removeTableLines(binary, w, h);
                 }
-                ctx.putImageData(imgData, 0, 0);
+                writeBinaryToCanvas(ctx, binary, imgData);
             } catch (imgErr) {
                 // Tetap lanjutkan jika manipulasi piksel tidak tersedia
             }
 
             return canvasEl.toDataURL('image/png');
+        }
+
+        function subCropDataUrl(dataUrl, rx, ry, rw, rh) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => {
+                    const c = document.createElement('canvas');
+                    const sx = Math.max(0, Math.round(img.width * rx));
+                    const sy = Math.max(0, Math.round(img.height * ry));
+                    const sw = Math.max(10, Math.round(img.width * rw));
+                    const sh = Math.max(10, Math.round(img.height * rh));
+                    c.width = sw;
+                    c.height = sh;
+                    const ctx = c.getContext('2d');
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, sw, sh);
+                    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+                    resolve(c.toDataURL('image/png'));
+                };
+                img.onerror = () => resolve(dataUrl);
+                img.src = dataUrl;
+            });
+        }
+
+        function cleanIdentityField(rawText, labelKeyword) {
+            let txt = (rawText || '')
+                .replace(/[|_[\]{}()~`"'\\]/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+
+            const regex = new RegExp(`^.*?\\b${labelKeyword}\\b\\s*[:=\\-.;]*\\s*`, 'i');
+            txt = txt.replace(regex, '');
+            txt = txt.replace(/^[:=\-.;\s]+|[:=\-.;\s]+$/g, '');
+            return txt.toUpperCase();
         }
 
         function parseIdentityText(rawText) {
@@ -703,7 +863,7 @@
                 detectedNama = namaMatch[1].replace(/^[:=\-\s]+|[:=\-\s]+$/g, '').toUpperCase();
             }
 
-            const kelasMatch = cleanFlat.match(/\bKELAS\s*[:=\-]?\s*(.*?)(?=\bPELAJARAN\b|\bNOMOR\b|$)/i);
+            const kelasMatch = cleanFlat.match(/\bKELAS\s*[:=\-]?\s*(.*?)(?=\bMATA\b|\bPELAJARAN\b|\bNOMOR\b|$)/i);
             if (kelasMatch && kelasMatch[1]) {
                 detectedKelas = kelasMatch[1].replace(/^[:=\-\s]+|[:=\-\s]+$/g, '').toUpperCase();
             }
@@ -720,8 +880,7 @@
             return { detectedNama, detectedKelas };
         }
 
-        function parseAnswersText(rawText) {
-            const qCount = window._ljkTotalQuestions || 40;
+        function extractLettersFromOcr(rawText) {
             const lines = (rawText || '')
                 .split(/\r?\n/)
                 .map(l => l.trim())
@@ -730,51 +889,43 @@
             const filteredLines = [];
             for (const line of lines) {
                 const upper = line.toUpperCase();
-                if (/REKAP|JAWABAN|PILIHAN|GANDA|ISIKAN|HURUF|KAPITAL|KOTAK|MENURUT|KALIAN|PALING|BENAR|PETUNJUK|CONTOH|ESSAY|NAMA|KELAS|PELAJARAN|PESERTA|TANGGAL|RUANG/i.test(upper)) {
+                if (/PILIHAN|GANDA|ISILAH|HURUF|KAPITAL|SESUAI|DIPILIH|REKAP|PETUNJUK|CONTOH|ESSAY|NAMA|KELAS|PELAJARAN|PESERTA|TANGGAL|RUANG/i.test(upper)) {
                     continue;
                 }
                 filteredLines.push(upper);
             }
 
-            const normalized = filteredLines
-                .join(' ')
-                .replace(/[|_[\]{}().,;:\-\/\\]/g, ' ')
-                .replace(/[^A-Z0-9\s]/g, ' ');
-
-            const detectedAnswers = new Array(qCount).fill('');
-            let filledCount = 0;
-
-            const rawTokens = normalized.split(/\s+/).filter(Boolean);
-            const letterStream = [];
-
-            for (const tok of rawTokens) {
-                if (/^[ABCDE]$/.test(tok)) {
-                    letterStream.push(tok);
-                } else if (/^[ABCDE]{2,10}$/.test(tok)) {
-                    for (const ch of tok) {
-                        letterStream.push(ch);
-                    }
-                }
-            }
-
-            for (let i = 0; i < Math.min(letterStream.length, qCount); i++) {
-                detectedAnswers[i] = letterStream[i];
-            }
-
-            for (let i = 0; i < qCount; i++) {
-                const ansEl = document.getElementById(`ans-${i}`);
-                if (ansEl && detectedAnswers[i]) {
-                    ansEl.value = detectedAnswers[i];
-                    filledCount++;
-                }
-            }
-
-            return filledCount;
+            // Hapus semua karakter selain huruf A-E
+            return filteredLines.join('').replace(/[^ABCDE]/g, '').split('');
         }
 
-        async function runOcrImages(identityImgUrl, answersImgUrl) {
+        function updateScanPreviewUI(identityImgUrl, answersImgUrl) {
+            const box = document.getElementById('ocr-preview-box');
+            const idWrap = document.getElementById('preview-id-wrap');
+            const idImg = document.getElementById('preview-id-img');
+            const ansWrap = document.getElementById('preview-ans-wrap');
+            const ansImg = document.getElementById('preview-ans-img');
+            if (!box || !ansImg) return;
+
+            box.classList.remove('hidden');
+            ansImg.src = answersImgUrl;
+
+            if (identityImgUrl && idWrap && idImg) {
+                idImg.src = identityImgUrl;
+                idWrap.classList.remove('hidden');
+                if (ansWrap) ansWrap.classList.remove('sm:col-span-2');
+            } else if (idWrap) {
+                idWrap.classList.add('hidden');
+                if (ansWrap) ansWrap.classList.add('sm:col-span-2');
+            }
+        }
+
+        async function runOcrImages(identityImgUrl, answersImgUrl, isTwoRowTable = true) {
             const progressBox = document.getElementById('ocr-progress');
             const statusText = document.getElementById('ocr-status-text');
+            const qCount = window._ljkTotalQuestions || 40;
+
+            updateScanPreviewUI(identityImgUrl, answersImgUrl);
 
             if (progressBox) progressBox.classList.remove('hidden');
             if (statusText) statusText.textContent = "Mempersiapkan mesin pemindai OCR...";
@@ -784,37 +935,100 @@
                     throw new Error("Pustaka OCR belum selesai dimuat. Periksa koneksi internet Anda.");
                 }
 
-                let currentStage = identityImgUrl ? 'identitas' : 'jawaban';
+                let stageLabel = identityImgUrl ? 'Membaca Nama & Kelas...' : 'Membaca Jawaban PG...';
                 const worker = await Tesseract.createWorker('eng', 1, {
                     logger: m => {
                         if (m.status === 'recognizing text' && statusText) {
                             const pct = Math.round((m.progress || 0) * 100);
-                            statusText.textContent = currentStage === 'identitas'
-                                ? `Membaca Nama & Kelas... ${pct}%`
-                                : `Membaca Kotak Jawaban PG... ${pct}%`;
+                            statusText.textContent = `${stageLabel} ${pct}%`;
                         }
                     }
                 });
 
-                let idInfo = { detectedNama: '', detectedKelas: '' };
+                let detectedNama = '';
+                let detectedKelas = '';
+
+                // 1. Baca Identitas (Split Kiri = NAMA, Kanan = KELAS sesuai layout LJK ASAS)
                 if (identityImgUrl) {
-                    const resId = await worker.recognize(identityImgUrl);
-                    idInfo = parseIdentityText(resId.data.text);
+                    await worker.setParameters({
+                        tessedit_pageseg_mode: '6',
+                        tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 .:-/'
+                    });
+
+                    stageLabel = 'Membaca Nama Siswa...';
+                    const leftNamaCrop = await subCropDataUrl(identityImgUrl, 0.0, 0.0, 0.50, 1.0);
+                    const resNama = await worker.recognize(leftNamaCrop);
+                    detectedNama = cleanIdentityField(resNama.data.text, 'NAMA');
+
+                    stageLabel = 'Membaca Kelas Siswa...';
+                    const rightKelasCrop = await subCropDataUrl(identityImgUrl, 0.50, 0.0, 0.50, 1.0);
+                    const resKelas = await worker.recognize(rightKelasCrop);
+                    detectedKelas = cleanIdentityField(resKelas.data.text, 'KELAS');
+
+                    if (detectedNama.length >= 2) {
+                        const namaEl = document.getElementById('nama');
+                        if (namaEl) namaEl.value = detectedNama;
+                    }
+                    if (detectedKelas.length >= 1) {
+                        const kelasEl = document.getElementById('kelas');
+                        if (kelasEl) kelasEl.value = detectedKelas;
+                    }
                 }
 
-                currentStage = 'jawaban';
-                const resAns = await worker.recognize(answersImgUrl);
-                if (!identityImgUrl) {
-                    idInfo = parseIdentityText(resAns.data.text);
+                // 2. Baca Kotak Jawaban PG dengan whitelist khusus A-E agar garis/angka tidak mengganggu
+                await worker.setParameters({
+                    tessedit_pageseg_mode: '7',
+                    tessedit_char_whitelist: 'ABCDE'
+                });
+
+                const detectedAnswers = new Array(qCount).fill('');
+
+                if (isTwoRowTable && qCount > 20) {
+                    // Baris 1 (No. 1 - 20): lewati bagian atas (header nomor 1..20)
+                    stageLabel = 'Membaca Jawaban No. 1–20...';
+                    const row1Crop = await subCropDataUrl(answersImgUrl, 0.0, 0.14, 1.0, 0.36);
+                    const resRow1 = await worker.recognize(row1Crop);
+                    const letters1 = extractLettersFromOcr(resRow1.data.text);
+                    for (let i = 0; i < Math.min(letters1.length, 20); i++) {
+                        detectedAnswers[i] = letters1[i];
+                    }
+
+                    // Baris 2 (No. 21 - 40): lewati bagian atas (header nomor 21..40)
+                    stageLabel = 'Membaca Jawaban No. 21–40...';
+                    const row2Crop = await subCropDataUrl(answersImgUrl, 0.0, 0.64, 1.0, 0.36);
+                    const resRow2 = await worker.recognize(row2Crop);
+                    const letters2 = extractLettersFromOcr(resRow2.data.text);
+                    for (let i = 0; i < Math.min(letters2.length, qCount - 20); i++) {
+                        detectedAnswers[20 + i] = letters2[i];
+                    }
+                } else {
+                    await worker.setParameters({
+                        tessedit_pageseg_mode: '6',
+                        tessedit_char_whitelist: 'ABCDE'
+                    });
+                    stageLabel = 'Membaca Jawaban PG...';
+                    const resAns = await worker.recognize(answersImgUrl);
+                    const letters = extractLettersFromOcr(resAns.data.text);
+                    for (let i = 0; i < Math.min(letters.length, qCount); i++) {
+                        detectedAnswers[i] = letters[i];
+                    }
                 }
-                const filledCount = parseAnswersText(resAns.data.text);
 
                 await worker.terminate();
 
-                if (filledCount > 0 || idInfo.detectedNama || idInfo.detectedKelas) {
-                    window.showToast(`Scan selesai! Terbaca ${filledCount} jawaban. Silakan cek kembali sebelum simpan.`, "success");
+                let filledCount = 0;
+                for (let i = 0; i < qCount; i++) {
+                    const ansEl = document.getElementById(`ans-${i}`);
+                    if (ansEl && detectedAnswers[i]) {
+                        ansEl.value = detectedAnswers[i];
+                        filledCount++;
+                    }
+                }
+
+                if (filledCount > 0 || detectedNama || detectedKelas) {
+                    window.showToast(`Scan selesai! Terbaca ${filledCount}/${qCount} jawaban. Silakan periksa sebelum simpan.`, "success");
                 } else {
-                    window.showToast("Teks LJK kurang jelas terbaca. Pastikan cahaya cukup & LJK pas di dalam bingkai.", "error");
+                    window.showToast("Huruf belum terbaca. Cek Pratinjau Potongan Scan agar LJK pas di dalam bingkai.", "error");
                 }
             } catch (ocrError) {
                 console.error("OCR Scan Error:", ocrError);
@@ -829,13 +1043,13 @@
             const canvasEl = document.getElementById('camera-canvas');
 
             if (!videoEl || !canvasEl || !videoEl.videoWidth || !videoEl.videoHeight) {
-                return window.showToast("Kamera langsung belum aktif. Ketuk tombol 'Kamera HP' atau izinkan kamera.", "error");
+                return window.showToast("Kamera langsung belum aktif. Ketuk tombol 'Kamera HP' atau 'Pilih Foto'.", "error");
             }
 
             const baseRect = getVisibleVideoCropRect(videoEl);
 
             if (window._ljkGuideMode === 'step1') {
-                window._ljkStep1IdentityImg = cropAndEnhanceSource(videoEl, baseRect, canvasEl, 0.02, 0.27, 0.96, 0.46);
+                window._ljkStep1IdentityImg = cropAndEnhanceSource(videoEl, baseRect, canvasEl, 0.02, 0.27, 0.96, 0.46, true);
                 window._ljkGuideMode = 'step2';
                 updateGuideUI();
                 return window.showToast("Tahap 1 tersimpan! Sekarang arahkan ke Tabel Jawaban 1–40 lalu tekan tombol biru.", "success");
@@ -843,23 +1057,25 @@
 
             if (window._ljkGuideMode === 'step2') {
                 const identityImgUrl = window._ljkStep1IdentityImg;
-                const answersImgUrl = cropAndEnhanceSource(videoEl, baseRect, canvasEl, 0.02, 0.11, 0.96, 0.78);
+                const answersImgUrl = cropAndEnhanceSource(videoEl, baseRect, canvasEl, 0.02, 0.11, 0.96, 0.78, true);
                 window.closeCameraModal();
-                return await runOcrImages(identityImgUrl, answersImgUrl);
+                return await runOcrImages(identityImgUrl, answersImgUrl, true);
             }
 
             let identityImgUrl = null;
             let answersImgUrl = null;
+            let isTwoRow = true;
 
             if (window._ljkGuideMode === 'dual') {
-                identityImgUrl = cropAndEnhanceSource(videoEl, baseRect, canvasEl, 0.02, 0.02, 0.96, 0.23);
-                answersImgUrl = cropAndEnhanceSource(videoEl, baseRect, canvasEl, 0.02, 0.48, 0.96, 0.50);
+                identityImgUrl = cropAndEnhanceSource(videoEl, baseRect, canvasEl, 0.02, 0.02, 0.96, 0.23, true);
+                answersImgUrl = cropAndEnhanceSource(videoEl, baseRect, canvasEl, 0.02, 0.48, 0.96, 0.50, true);
             } else {
-                answersImgUrl = cropAndEnhanceSource(videoEl, baseRect, canvasEl, 0.03, 0.05, 0.94, 0.90);
+                answersImgUrl = cropAndEnhanceSource(videoEl, baseRect, canvasEl, 0.03, 0.05, 0.94, 0.90, true);
+                isTwoRow = false;
             }
 
             window.closeCameraModal();
-            await runOcrImages(identityImgUrl, answersImgUrl);
+            await runOcrImages(identityImgUrl, answersImgUrl, isTwoRow);
         };
 
         window.handleFallbackImageScan = function (inputEl) {
@@ -874,9 +1090,18 @@
                 const img = new Image();
                 img.onload = async function () {
                     const fullRect = { visX: 0, visY: 0, visW: img.width, visH: img.height };
-                    const fullImgUrl = cropAndEnhanceSource(img, fullRect, canvasEl, 0, 0, 1, 1);
                     window.closeCameraModal();
-                    await runOcrImages(null, fullImgUrl);
+
+                    // Jika foto berupa lembar penuh (portrait seperti foto A4 LJK ASAS), potong zona identitas & tabel PG otomatis
+                    if (img.height > img.width * 1.15) {
+                        const identityImgUrl = cropAndEnhanceSource(img, fullRect, canvasEl, 0.06, 0.30, 0.88, 0.06, true);
+                        const answersImgUrl = cropAndEnhanceSource(img, fullRect, canvasEl, 0.03, 0.44, 0.94, 0.15, true);
+                        await runOcrImages(identityImgUrl, answersImgUrl, true);
+                    } else {
+                        const identityImgUrl = cropAndEnhanceSource(img, fullRect, canvasEl, 0.02, 0.02, 0.96, 0.24, true);
+                        const answersImgUrl = cropAndEnhanceSource(img, fullRect, canvasEl, 0.02, 0.46, 0.96, 0.52, true);
+                        await runOcrImages(identityImgUrl, answersImgUrl, true);
+                    }
                 };
                 img.src = ev.target.result;
             };
@@ -1035,7 +1260,7 @@
             if (keyContainer) {
                 let keyHtml = '';
                 for (let i = 0; i < totalQuestions; i++) {
-                    const currentKeyVal = masterAnswerKey[i] || '';
+                    const currentKeyVal = String(masterAnswerKey[i] || '').replace(/[^ABCDE]/gi, '').toUpperCase().slice(0, 1);
                     keyHtml += `
                         <div class="flex flex-col items-center bg-gray-50 border border-gray-200 rounded-lg p-1.5">
                             <label for="key-${i}" class="text-xs text-gray-600 font-semibold mb-1">${i + 1}</label>
@@ -1053,6 +1278,7 @@
             if (studentContainer) {
                 let studentHtml = '';
                 for (let i = 0; i < totalQuestions; i++) {
+                    const cleanAnsVal = String(tempStudentAns[i] || '').replace(/[^ABCDE]/gi, '').toUpperCase().slice(0, 1);
                     studentHtml += `
                         <div class="flex flex-col items-center bg-gray-50 border border-gray-200 rounded-lg p-1.5">
                             <label for="ans-${i}" class="text-xs text-gray-500 font-medium mb-1">${i + 1}</label>
@@ -1060,7 +1286,7 @@
                                    class="answer-input w-full p-1.5 bg-white border border-gray-300 rounded font-bold text-blue-700 focus:ring-blue-500 focus:border-blue-500"
                                    oninput="validateInput(this, false, ${i})"
                                    onkeydown="handleGridKeydown(event, false, ${i})"
-                                   value="${tempStudentAns[i] || ''}">
+                                   value="${cleanAnsVal}">
                         </div>
                     `;
                 }
@@ -1311,8 +1537,8 @@
                             <span class="text-sm font-bold text-blue-700">${nilai}</span>
                         </td>
                         <td class="px-4 sm:px-6 py-3.5 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                            <button type="button" onclick="viewDetail('${res.id}')" class="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded transition-colors">Detail</button>
-                            <button type="button" onclick="deleteResult('${res.id}')" class="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded transition-colors">Hapus</button>
+                            <button type="button" onclick="viewDetail(decodeURIComponent('${encodeURIComponent(String(res.id || ''))}'))" class="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded transition-colors">Detail</button>
+                            <button type="button" onclick="deleteResult(decodeURIComponent('${encodeURIComponent(String(res.id || ''))}'))" class="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded transition-colors">Hapus</button>
                         </td>
                     </tr>
                 `;
